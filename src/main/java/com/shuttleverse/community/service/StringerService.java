@@ -1,0 +1,79 @@
+package com.shuttleverse.community.service;
+
+import com.shuttleverse.community.model.Stringer;
+import com.shuttleverse.community.model.StringerPrice;
+import com.shuttleverse.community.repository.StringerPriceRepository;
+import com.shuttleverse.community.repository.StringerRepository;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+public class StringerService {
+
+  private final StringerRepository stringerRepository;
+  private final StringerPriceRepository priceRepository;
+
+  @Transactional
+  public Stringer createStringer(Stringer stringer) {
+    return stringerRepository.save(stringer);
+  }
+
+  public Stringer getStringer(Long id) {
+    return stringerRepository.findById(id)
+        .orElseThrow(() -> new EntityNotFoundException("Stringer not found with id: " + id));
+  }
+
+  @Transactional
+  public Stringer updateStringer(Long id, Stringer stringer) {
+    if (!isOwner(id, stringer.getOwner().getId())) {
+      throw new AccessDeniedException("Only the owner can update stringer information");
+    }
+    stringer.setId(id);
+    return stringerRepository.save(stringer);
+  }
+
+  @Transactional
+  public void deleteStringer(Long id) {
+    Stringer stringer = getStringer(id);
+    if (!isOwner(id, stringer.getOwner().getId())) {
+      throw new AccessDeniedException("Only the owner can delete the stringer");
+    }
+    stringerRepository.delete(stringer);
+  }
+
+  @Transactional
+  public StringerPrice addPrice(Long stringerId, StringerPrice price) {
+    Stringer stringer = getStringer(stringerId);
+    price.setStringer(stringer);
+    return priceRepository.save(price);
+  }
+
+  @Transactional
+  public StringerPrice updatePrice(Long stringerId, Long priceId, StringerPrice price) {
+    Stringer stringer = getStringer(stringerId);
+    if (!isOwner(stringerId, stringer.getOwner().getId())) {
+      throw new AccessDeniedException("Only the owner can update price");
+    }
+    price.setId(priceId);
+    price.setStringer(stringer);
+    return priceRepository.save(price);
+  }
+
+  @Transactional
+  public StringerPrice upvotePrice(Long priceId) {
+    StringerPrice price = priceRepository.findById(priceId)
+        .orElseThrow(() -> new EntityNotFoundException("Price not found"));
+    price.setUpvotes(price.getUpvotes() + 1);
+    return priceRepository.save(price);
+  }
+
+
+  public boolean isOwner(Long stringerId, Long userId) {
+    Stringer stringer = getStringer(stringerId);
+    return stringer.getOwner() != null && stringer.getOwner().getId().equals(userId);
+  }
+}
