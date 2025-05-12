@@ -1,0 +1,3 @@
+spring:
+  datasource:
+    url: ${POSTGRESQL_PROD_URI}
