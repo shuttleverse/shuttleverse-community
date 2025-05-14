@@ -5,6 +5,7 @@ import com.shuttleverse.community.model.StringerPrice;
 import com.shuttleverse.community.repository.StringerPriceRepository;
 import com.shuttleverse.community.repository.StringerRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -22,13 +23,13 @@ public class StringerService {
     return stringerRepository.save(stringer);
   }
 
-  public Stringer getStringer(Long id) {
+  public Stringer getStringer(UUID id) {
     return stringerRepository.findById(id)
         .orElseThrow(() -> new EntityNotFoundException("Stringer not found with id: " + id));
   }
 
   @Transactional
-  public Stringer updateStringer(Long id, Stringer stringer) {
+  public Stringer updateStringer(UUID id, Stringer stringer) {
     if (!isOwner(id, stringer.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can update stringer information");
     }
@@ -37,7 +38,7 @@ public class StringerService {
   }
 
   @Transactional
-  public void deleteStringer(Long id) {
+  public void deleteStringer(UUID id) {
     Stringer stringer = getStringer(id);
     if (!isOwner(id, stringer.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can delete the stringer");
@@ -46,14 +47,14 @@ public class StringerService {
   }
 
   @Transactional
-  public StringerPrice addPrice(Long stringerId, StringerPrice price) {
+  public StringerPrice addPrice(UUID stringerId, StringerPrice price) {
     Stringer stringer = getStringer(stringerId);
     price.setStringer(stringer);
     return priceRepository.save(price);
   }
 
   @Transactional
-  public StringerPrice updatePrice(Long stringerId, Long priceId, StringerPrice price) {
+  public StringerPrice updatePrice(UUID stringerId, UUID priceId, StringerPrice price) {
     Stringer stringer = getStringer(stringerId);
     if (!isOwner(stringerId, stringer.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can update price");
@@ -64,7 +65,7 @@ public class StringerService {
   }
 
   @Transactional
-  public StringerPrice upvotePrice(Long priceId) {
+  public StringerPrice upvotePrice(UUID priceId) {
     StringerPrice price = priceRepository.findById(priceId)
         .orElseThrow(() -> new EntityNotFoundException("Price not found"));
     price.setUpvotes(price.getUpvotes() + 1);
@@ -72,7 +73,7 @@ public class StringerService {
   }
 
 
-  public boolean isOwner(Long stringerId, Long userId) {
+  public boolean isOwner(UUID stringerId, UUID userId) {
     Stringer stringer = getStringer(stringerId);
     return stringer.getOwner() != null && stringer.getOwner().getId().equals(userId);
   }

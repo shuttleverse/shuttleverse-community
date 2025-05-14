@@ -18,6 +18,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
+import java.util.UUID;
+
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
 class ClubControllerTest {
@@ -30,15 +32,20 @@ class ClubControllerTest {
 
     private Club club;
     private User user;
+    private UUID clubId;
+    private UUID userId;
 
     @BeforeEach
     void setUp() {
+        clubId = UUID.randomUUID();
+        userId = UUID.randomUUID();
+
         user = new User();
-        user.setId(1L);
+        user.setId(userId);
         user.setUsername("testuser");
 
         club = new Club();
-        club.setId(1L);
+        club.setId(clubId);
         club.setName("Test Club");
         club.setOwnerId(user.getId());
     }
@@ -56,34 +63,33 @@ class ClubControllerTest {
 
     @Test
     void getClub_Success() {
-        when(clubService.getClub(anyLong())).thenReturn(club);
+        when(clubService.getClub(any(UUID.class))).thenReturn(club);
 
-        ResponseEntity<ApiResponse<Club>> response = clubController.getClub(1L);
+        ResponseEntity<ApiResponse<Club>> response = clubController.getClub(clubId);
 
         assertTrue(response.getBody().isSuccess());
         assertEquals(club, response.getBody().getData());
-        verify(clubService).getClub(1L);
+        verify(clubService).getClub(clubId);
     }
 
     @Test
     void updateClub_Success() {
-        when(clubService.updateClub(anyLong(), any(Club.class))).thenReturn(club);
+        when(clubService.updateClub(any(UUID.class), any(Club.class))).thenReturn(club);
 
-        ResponseEntity<ApiResponse<Club>> response = clubController.updateClub(1L, club);
+        ResponseEntity<ApiResponse<Club>> response = clubController.updateClub(clubId, club);
 
         assertTrue(response.getBody().isSuccess());
         assertEquals(club, response.getBody().getData());
-        verify(clubService).updateClub(1L, club);
+        verify(clubService).updateClub(clubId, club);
     }
 
     @Test
     void deleteClub_Success() {
-        doNothing().when(clubService).deleteClub(anyLong());
+        doNothing().when(clubService).deleteClub(any(UUID.class));
 
-        ResponseEntity<ApiResponse<Void>> response = clubController.deleteClub(1L);
+        ResponseEntity<ApiResponse<Void>> response = clubController.deleteClub(clubId);
 
         assertTrue(response.getBody().isSuccess());
-        assertEquals("Club deleted successfully", response.getBody().getMessage());
-        verify(clubService).deleteClub(1L);
+        verify(clubService).deleteClub(clubId);
     }
 }

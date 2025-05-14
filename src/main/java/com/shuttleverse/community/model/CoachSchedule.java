@@ -12,6 +12,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.ZonedDateTime;
+import java.util.UUID;
 import lombok.Data;
 
 @Entity
@@ -22,7 +23,7 @@ public class CoachSchedule {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "schedule_id")
-  private Long id;
+  private UUID id;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "coach_id", nullable = false)

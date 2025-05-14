@@ -11,6 +11,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.ZonedDateTime;
+import java.util.UUID;
 import lombok.Data;
 
 @Entity
@@ -21,7 +22,7 @@ public class CourtSchedule {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "schedule_id")
-  private Long id;
+  private UUID id;
 
   @ManyToOne
   @JoinColumn(name = "court_id")

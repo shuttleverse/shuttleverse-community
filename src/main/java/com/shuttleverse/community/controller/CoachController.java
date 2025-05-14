@@ -17,8 +17,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.UUID;
+
 @RestController
-@RequestMapping("/api/v1/coaches")
+@RequestMapping("/coach")
 @RequiredArgsConstructor
 public class CoachController {
 
@@ -30,46 +32,50 @@ public class CoachController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ApiResponse<Coach>> getCoach(@PathVariable Long id) {
-    return ResponseEntity.ok(ApiResponse.success(coachService.getCoach(id)));
+  public ResponseEntity<ApiResponse<Coach>> getCoach(@PathVariable UUID id) {
+    Coach coach = coachService.getCoach(id);
+    return ResponseEntity.ok(ApiResponse.success(coach));
   }
 
   @PutMapping("/{id}")
-  @PreAuthorize("@coachService.isOwner(#id, authentication.principal)")
+  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<Coach>> updateCoach(
-      @PathVariable Long id,
+      @PathVariable UUID id,
       @Validated @RequestBody Coach coach) {
-    return ResponseEntity.ok(ApiResponse.success(coachService.updateCoach(id, coach)));
+    Coach updatedCoach = coachService.updateCoach(id, coach);
+    return ResponseEntity.ok(ApiResponse.success(updatedCoach));
   }
 
   @DeleteMapping("/{id}")
-  @PreAuthorize("@coachService.isOwner(#id, authentication.principal)")
-  public ResponseEntity<ApiResponse<Void>> deleteCoach(@PathVariable Long id) {
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<ApiResponse<Void>> deleteCoach(@PathVariable UUID id) {
     coachService.deleteCoach(id);
-    return ResponseEntity.ok(ApiResponse.success("Coach deleted successfully", null));
+    return ResponseEntity.ok(ApiResponse.success(null));
   }
 
   @PostMapping("/{id}/schedule")
+  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<CoachSchedule>> addSchedule(
-      @PathVariable Long id,
+      @PathVariable UUID id,
       @Validated @RequestBody CoachSchedule schedule) {
-    return ResponseEntity.ok(ApiResponse.success(coachService.addSchedule(id, schedule)));
+    CoachSchedule newSchedule = coachService.addSchedule(id, schedule);
+    return ResponseEntity.ok(ApiResponse.success(newSchedule));
   }
 
   @PutMapping("/{id}/schedule/{scheduleId}")
-  @PreAuthorize("@coachService.isOwner(#id, authentication.principal)")
+  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<CoachSchedule>> updateSchedule(
-      @PathVariable Long id,
-      @PathVariable Long scheduleId,
+      @PathVariable UUID id,
+      @PathVariable UUID scheduleId,
       @Validated @RequestBody CoachSchedule schedule) {
-    return ResponseEntity.ok(
-        ApiResponse.success(coachService.updateSchedule(id, scheduleId, schedule)));
+    CoachSchedule updatedSchedule = coachService.updateSchedule(id, scheduleId, schedule);
+    return ResponseEntity.ok(ApiResponse.success(updatedSchedule));
   }
 
   @PostMapping("/{id}/upvote-schedule/{scheduleId}")
   public ResponseEntity<ApiResponse<CoachSchedule>> upvoteSchedule(
-      @PathVariable Long id,
-      @PathVariable Long scheduleId) {
+      @PathVariable UUID id,
+      @PathVariable UUID scheduleId) {
     return ResponseEntity.ok(ApiResponse.success(coachService.upvoteSchedule(scheduleId)));
   }
 }

@@ -12,6 +12,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.ZonedDateTime;
+import java.util.UUID;
 import lombok.Data;
 
 @Entity
@@ -22,10 +23,10 @@ public class StringerPrice {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "price_id")
-  private Long id;
+  private UUID id;
 
   @Column(name = "stringer_id", nullable = false, insertable = false, updatable = false)
-  private Long stringerId;
+  private UUID stringerId;
 
   @Column(name = "string_name", nullable = false, length = 100)
   private String stringName;
