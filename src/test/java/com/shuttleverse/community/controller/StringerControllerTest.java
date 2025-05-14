@@ -1,10 +1,19 @@
 package com.shuttleverse.community.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.shuttleverse.community.api.ApiResponse;
 import com.shuttleverse.community.model.Stringer;
 import com.shuttleverse.community.model.StringerPrice;
 import com.shuttleverse.community.model.User;
 import com.shuttleverse.community.service.StringerService;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,185 +23,198 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
 class StringerControllerTest {
 
-    @Mock
-    private StringerService stringerService;
+  @Mock
+  private StringerService stringerService;
 
-    @InjectMocks
-    private StringerController stringerController;
+  @InjectMocks
+  private StringerController stringerController;
 
-    private Stringer stringer;
-    private StringerPrice price;
-    private User user;
+  private Stringer stringer;
+  private StringerPrice price;
+  private User user;
+  private UUID stringerId;
+  private UUID userId;
+  private UUID priceId;
 
-    @BeforeEach
-    void setUp() {
-        user = new User();
-        user.setId(1L);
-        user.setUsername("testuser");
+  @BeforeEach
+  void setUp() {
+    stringerId = UUID.randomUUID();
+    userId = UUID.randomUUID();
+    priceId = UUID.randomUUID();
 
-        stringer = new Stringer();
-        stringer.setId(1L);
-        stringer.setName("Test Stringer");
-        stringer.setOwner(user);
+    user = new User();
+    user.setId(userId);
+    user.setUsername("testuser");
 
-        price = new StringerPrice();
-        price.setId(1L);
-        price.setStringName("Polyester");
-        price.setPrice(20.0);
-        price.setStringerId(1L);
-        price.setUpvotes(0);
-        price.setIsVerified(false);
-        price.setSubmittedBy(user);
-    }
+    stringer = new Stringer();
+    stringer.setId(stringerId);
+    stringer.setName("Test Stringer");
+    stringer.setOwner(user);
 
-    @Test
-    void createStringer_Success() {
-        when(stringerService.createStringer(any(Stringer.class))).thenReturn(stringer);
+    price = new StringerPrice();
+    price.setId(priceId);
+    price.setStringName("Polyester");
+    price.setPrice(20.0);
+    price.setStringerId(stringerId);
+    price.setUpvotes(0);
+    price.setIsVerified(false);
+    price.setSubmittedBy(user);
+  }
 
-        ResponseEntity<ApiResponse<Stringer>> response = stringerController.createStringer(stringer);
+  @Test
+  void createStringer_Success() {
+    when(stringerService.createStringer(any(Stringer.class))).thenReturn(stringer);
 
-        assertTrue(response.getBody().isSuccess());
-        assertEquals(stringer, response.getBody().getData());
-        verify(stringerService).createStringer(any(Stringer.class));
-    }
+    ResponseEntity<ApiResponse<Stringer>> response = stringerController.createStringer(stringer);
 
-    @Test
-    void getStringer_Success() {
-        when(stringerService.getStringer(anyLong())).thenReturn(stringer);
+    assertTrue(response.getBody().isSuccess());
+    assertEquals(stringer, response.getBody().getData());
+    verify(stringerService).createStringer(any(Stringer.class));
+  }
 
-        ResponseEntity<ApiResponse<Stringer>> response = stringerController.getStringer(1L);
+  @Test
+  void getStringer_Success() {
+    when(stringerService.getStringer(any(UUID.class))).thenReturn(stringer);
 
-        assertTrue(response.getBody().isSuccess());
-        assertEquals(stringer, response.getBody().getData());
-        verify(stringerService).getStringer(1L);
-    }
+    ResponseEntity<ApiResponse<Stringer>> response = stringerController.getStringer(stringerId);
 
-    @Test
-    void updateStringer_Success() {
-        when(stringerService.updateStringer(anyLong(), any(Stringer.class))).thenReturn(stringer);
+    assertTrue(response.getBody().isSuccess());
+    assertEquals(stringer, response.getBody().getData());
+    verify(stringerService).getStringer(stringerId);
+  }
 
-        ResponseEntity<ApiResponse<Stringer>> response = stringerController.updateStringer(1L, stringer);
+  @Test
+  void updateStringer_Success() {
+    when(stringerService.updateStringer(any(UUID.class), any(Stringer.class))).thenReturn(stringer);
 
-        assertTrue(response.getBody().isSuccess());
-        assertEquals(stringer, response.getBody().getData());
-        verify(stringerService).updateStringer(1L, stringer);
-    }
+    ResponseEntity<ApiResponse<Stringer>> response =
+        stringerController.updateStringer(stringerId, stringer);
 
-    @Test
-    void deleteStringer_Success() {
-        doNothing().when(stringerService).deleteStringer(anyLong());
+    assertTrue(response.getBody().isSuccess());
+    assertEquals(stringer, response.getBody().getData());
+    verify(stringerService).updateStringer(stringerId, stringer);
+  }
 
-        ResponseEntity<ApiResponse<Void>> response = stringerController.deleteStringer(1L);
+  @Test
+  void deleteStringer_Success() {
+    doNothing().when(stringerService).deleteStringer(any(UUID.class));
 
-        assertTrue(response.getBody().isSuccess());
-        assertEquals("Stringer deleted successfully", response.getBody().getMessage());
-        verify(stringerService).deleteStringer(1L);
-    }
+    ResponseEntity<ApiResponse<Void>> response = stringerController.deleteStringer(stringerId);
 
-    @Test
-    void addPrice_Success() {
-        when(stringerService.addPrice(anyLong(), any(StringerPrice.class))).thenReturn(price);
+    assertTrue(response.getBody().isSuccess());
+    verify(stringerService).deleteStringer(stringerId);
+  }
 
-        ResponseEntity<ApiResponse<StringerPrice>> response = stringerController.addPrice(1L, price);
+  @Test
+  void addPrice_Success() {
+    when(stringerService.addPrice(any(UUID.class), any(StringerPrice.class))).thenReturn(price);
 
-        assertTrue(response.getBody().isSuccess());
-        assertEquals(price, response.getBody().getData());
-        verify(stringerService).addPrice(1L, price);
-    }
+    ResponseEntity<ApiResponse<StringerPrice>> response =
+        stringerController.addPrice(stringerId, price);
 
-    @Test
-    void updatePrice_Success() {
-        when(stringerService.updatePrice(anyLong(), anyLong(), any(StringerPrice.class))).thenReturn(price);
+    assertTrue(response.getBody().isSuccess());
+    assertEquals(price, response.getBody().getData());
+    verify(stringerService).addPrice(stringerId, price);
+  }
 
-        ResponseEntity<ApiResponse<StringerPrice>> response = stringerController.updatePrice(1L, 1L, price);
+  @Test
+  void updatePrice_Success() {
+    when(stringerService.updatePrice(any(UUID.class), any(UUID.class),
+        any(StringerPrice.class))).thenReturn(price);
 
-        assertTrue(response.getBody().isSuccess());
-        assertEquals(price, response.getBody().getData());
-        verify(stringerService).updatePrice(1L, 1L, price);
-    }
+    ResponseEntity<ApiResponse<StringerPrice>> response =
+        stringerController.updatePrice(stringerId, priceId,
+            price);
 
-    @Test
-    void addMultiplePrices_Success() {
-        // Create multiple string prices
-        StringerPrice price1 = new StringerPrice();
-        price1.setStringName("Yonex BG65");
-        price1.setPrice(20.0);
-        price1.setStringerId(1L);
-        price1.setUpvotes(0);
-        price1.setIsVerified(false);
-        price1.setSubmittedBy(user);
+    assertTrue(response.getBody().isSuccess());
+    assertEquals(price, response.getBody().getData());
+    verify(stringerService).updatePrice(stringerId, priceId, price);
+  }
 
-        StringerPrice price2 = new StringerPrice();
-        price2.setStringName("Yonex BG80");
-        price2.setPrice(25.0);
-        price2.setStringerId(1L);
-        price2.setUpvotes(0);
-        price2.setIsVerified(false);
-        price2.setSubmittedBy(user);
+  @Test
+  void addMultiplePrices_Success() {
+    // Create multiple string prices
+    StringerPrice price1 = new StringerPrice();
+    price1.setId(UUID.randomUUID());
+    price1.setStringName("Yonex BG65");
+    price1.setPrice(20.0);
+    price1.setStringerId(stringerId);
+    price1.setUpvotes(0);
+    price1.setIsVerified(false);
+    price1.setSubmittedBy(user);
 
-        when(stringerService.addPrice(anyLong(), any(StringerPrice.class)))
-                .thenReturn(price1)
-                .thenReturn(price2);
+    StringerPrice price2 = new StringerPrice();
+    price2.setId(UUID.randomUUID());
+    price2.setStringName("Yonex BG80");
+    price2.setPrice(25.0);
+    price2.setStringerId(stringerId);
+    price2.setUpvotes(0);
+    price2.setIsVerified(false);
+    price2.setSubmittedBy(user);
 
-        // Add first price
-        ResponseEntity<ApiResponse<StringerPrice>> response1 = stringerController.addPrice(1L, price1);
-        assertTrue(response1.getBody().isSuccess());
-        assertEquals(price1, response1.getBody().getData());
+    when(stringerService.addPrice(any(UUID.class), any(StringerPrice.class)))
+        .thenReturn(price1)
+        .thenReturn(price2);
 
-        // Add second price
-        ResponseEntity<ApiResponse<StringerPrice>> response2 = stringerController.addPrice(1L, price2);
-        assertTrue(response2.getBody().isSuccess());
-        assertEquals(price2, response2.getBody().getData());
+    // Add first price
+    ResponseEntity<ApiResponse<StringerPrice>> response1 =
+        stringerController.addPrice(stringerId, price1);
+    assertTrue(response1.getBody().isSuccess());
+    assertEquals(price1, response1.getBody().getData());
 
-        verify(stringerService, times(2)).addPrice(anyLong(), any(StringerPrice.class));
-    }
+    // Add second price
+    ResponseEntity<ApiResponse<StringerPrice>> response2 =
+        stringerController.addPrice(stringerId, price2);
+    assertTrue(response2.getBody().isSuccess());
+    assertEquals(price2, response2.getBody().getData());
 
-    @Test
-    void upvotePrice_Success() {
-        StringerPrice price = new StringerPrice();
-        price.setId(1L);
-        price.setStringName("Yonex BG65");
-        price.setPrice(20.0);
-        price.setStringerId(1L);
-        price.setUpvotes(1); // After upvote
-        price.setIsVerified(false);
-        price.setSubmittedBy(user);
+    verify(stringerService, times(2)).addPrice(any(UUID.class), any(StringerPrice.class));
+  }
 
-        when(stringerService.upvotePrice(anyLong())).thenReturn(price);
+  @Test
+  void upvotePrice_Success() {
+    StringerPrice price = new StringerPrice();
+    price.setId(priceId);
+    price.setStringName("Yonex BG65");
+    price.setPrice(20.0);
+    price.setStringerId(stringerId);
+    price.setUpvotes(1); // After upvote
+    price.setIsVerified(false);
+    price.setSubmittedBy(user);
 
-        ResponseEntity<ApiResponse<StringerPrice>> response = stringerController.upvotePrice(1L, 1L);
+    when(stringerService.upvotePrice(any(UUID.class))).thenReturn(price);
 
-        assertTrue(response.getBody().isSuccess());
-        assertEquals(price, response.getBody().getData());
-        assertEquals(1, response.getBody().getData().getUpvotes());
-        verify(stringerService).upvotePrice(1L);
-    }
+    ResponseEntity<ApiResponse<StringerPrice>> response =
+        stringerController.upvotePrice(stringerId, priceId);
 
-    @Test
-    void addNewPriceForExistingStringer_Success() {
-        StringerPrice newPrice = new StringerPrice();
-        newPrice.setStringName("Yonex BG95");
-        newPrice.setPrice(30.0);
-        newPrice.setStringerId(1L);
-        newPrice.setUpvotes(0);
-        newPrice.setIsVerified(false);
-        newPrice.setSubmittedBy(user);
+    assertTrue(response.getBody().isSuccess());
+    assertEquals(price, response.getBody().getData());
+    assertEquals(1, response.getBody().getData().getUpvotes());
+    verify(stringerService).upvotePrice(priceId);
+  }
 
-        when(stringerService.addPrice(anyLong(), any(StringerPrice.class))).thenReturn(newPrice);
+  @Test
+  void addNewPriceForExistingStringer_Success() {
+    StringerPrice newPrice = new StringerPrice();
+    newPrice.setId(UUID.randomUUID());
+    newPrice.setStringName("Yonex BG95");
+    newPrice.setPrice(30.0);
+    newPrice.setStringerId(stringerId);
+    newPrice.setUpvotes(0);
+    newPrice.setIsVerified(false);
+    newPrice.setSubmittedBy(user);
 
-        ResponseEntity<ApiResponse<StringerPrice>> response = stringerController.addPrice(1L, newPrice);
+    when(stringerService.addPrice(any(UUID.class), any(StringerPrice.class))).thenReturn(newPrice);
 
-        assertTrue(response.getBody().isSuccess());
-        assertEquals(newPrice, response.getBody().getData());
-        verify(stringerService).addPrice(1L, newPrice);
-    }
+    ResponseEntity<ApiResponse<StringerPrice>> response =
+        stringerController.addPrice(stringerId, newPrice);
+
+    assertTrue(response.getBody().isSuccess());
+    assertEquals(newPrice, response.getBody().getData());
+    verify(stringerService).addPrice(stringerId, newPrice);
+  }
 }

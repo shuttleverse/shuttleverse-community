@@ -9,6 +9,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.ZonedDateTime;
+import java.util.UUID;
 import lombok.Data;
 
 @Entity
@@ -19,7 +20,7 @@ public class Club {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "club_id")
-  private Long id;
+  private UUID id;
 
   @Column(nullable = false, length = 100)
   private String name;
@@ -43,10 +44,10 @@ public class Club {
   private ZonedDateTime updatedAt;
 
   @Column(name = "creator_id", nullable = false)
-  private Long creatorId;
+  private UUID creatorId;
 
   @Column(name = "owner_id", nullable = false)
-  private Long ownerId;
+  private UUID ownerId;
 
   @Column(name = "is_verified", nullable = false)
   private boolean isVerified;

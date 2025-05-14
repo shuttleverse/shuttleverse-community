@@ -7,14 +7,14 @@ import com.shuttleverse.community.model.User;
 import com.shuttleverse.community.repository.CourtRepository;
 import com.shuttleverse.community.repository.CourtScheduleRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,20 +36,29 @@ class CourtServiceTest {
     private CourtSchedule schedule;
     private CourtPrice price;
     private User user;
+    private UUID courtId;
+    private UUID userId;
+    private UUID scheduleId;
+    private UUID priceId;
 
     @BeforeEach
     void setUp() {
+        courtId = UUID.randomUUID();
+        userId = UUID.randomUUID();
+        scheduleId = UUID.randomUUID();
+        priceId = UUID.randomUUID();
+
         user = new User();
-        user.setId(1L);
+        user.setId(userId);
         user.setUsername("testuser");
 
         court = new Court();
-        court.setId(1L);
+        court.setId(courtId);
         court.setName("Test Court");
         court.setOwner(user);
 
         schedule = new CourtSchedule();
-        schedule.setId(1L);
+        schedule.setId(scheduleId);
         schedule.setDayOfWeek(1);
         schedule.setOpenTime("09:00");
         schedule.setCloseTime("22:00");
@@ -59,7 +68,7 @@ class CourtServiceTest {
         schedule.setCourt(court);
 
         price = new CourtPrice();
-        price.setId(1L);
+        price.setId(priceId);
         price.setPrice(30.0);
         price.setDuration(60);
         price.setUpvotes(0);
@@ -81,94 +90,94 @@ class CourtServiceTest {
 
     @Test
     void getCourt_Success() {
-        when(courtRepository.findById(anyLong())).thenReturn(Optional.of(court));
+        when(courtRepository.findById(any(UUID.class))).thenReturn(Optional.of(court));
 
-        Court result = courtService.getCourt(1L);
+        Court result = courtService.getCourt(courtId);
 
         assertNotNull(result);
         assertEquals(court.getId(), result.getId());
         assertEquals(court.getName(), result.getName());
-        verify(courtRepository).findById(1L);
+        verify(courtRepository).findById(courtId);
     }
 
     @Test
     void getCourt_NotFound() {
-        when(courtRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(courtRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> courtService.getCourt(1L));
-        verify(courtRepository).findById(1L);
+        assertThrows(EntityNotFoundException.class, () -> courtService.getCourt(courtId));
+        verify(courtRepository).findById(courtId);
     }
 
     @Test
     void addSchedule_Success() {
-        when(courtRepository.findById(anyLong())).thenReturn(Optional.of(court));
+        when(courtRepository.findById(any(UUID.class))).thenReturn(Optional.of(court));
         when(scheduleRepository.save(any(CourtSchedule.class))).thenReturn(schedule);
 
-        CourtSchedule result = courtService.addSchedule(1L, schedule);
+        CourtSchedule result = courtService.addSchedule(courtId, schedule);
 
         assertNotNull(result);
         assertEquals(schedule.getId(), result.getId());
         assertEquals(schedule.getDayOfWeek(), result.getDayOfWeek());
         assertEquals(schedule.getOpenTime(), result.getOpenTime());
         assertEquals(schedule.getCloseTime(), result.getCloseTime());
-        verify(courtRepository).findById(1L);
+        verify(courtRepository).findById(courtId);
         verify(scheduleRepository).save(any(CourtSchedule.class));
     }
 
     @Test
     void upvoteSchedule_Success() {
-        when(scheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
+        when(scheduleRepository.findById(any(UUID.class))).thenReturn(Optional.of(schedule));
         when(scheduleRepository.save(any(CourtSchedule.class))).thenReturn(schedule);
 
-        CourtSchedule result = courtService.upvoteSchedule(1L);
+        CourtSchedule result = courtService.upvoteSchedule(scheduleId);
 
         assertNotNull(result);
         assertEquals(1, result.getUpvotes());
-        verify(scheduleRepository).findById(1L);
+        verify(scheduleRepository).findById(scheduleId);
         verify(scheduleRepository).save(any(CourtSchedule.class));
     }
 
     @Test
     void upvoteSchedule_NotFound() {
-        when(scheduleRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(scheduleRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> courtService.upvoteSchedule(1L));
-        verify(scheduleRepository).findById(1L);
+        assertThrows(EntityNotFoundException.class, () -> courtService.upvoteSchedule(scheduleId));
+        verify(scheduleRepository).findById(scheduleId);
     }
 
     @Test
     void updateSchedule_Success() {
-        when(courtRepository.findById(anyLong())).thenReturn(Optional.of(court));
+        when(courtRepository.findById(any(UUID.class))).thenReturn(Optional.of(court));
         when(scheduleRepository.save(any(CourtSchedule.class))).thenReturn(schedule);
 
-        CourtSchedule result = courtService.updateSchedule(1L, 1L, schedule);
+        CourtSchedule result = courtService.updateSchedule(courtId, scheduleId, schedule);
 
         assertNotNull(result);
         assertEquals(schedule.getId(), result.getId());
         assertEquals(schedule.getDayOfWeek(), result.getDayOfWeek());
         assertEquals(schedule.getOpenTime(), result.getOpenTime());
         assertEquals(schedule.getCloseTime(), result.getCloseTime());
-        verify(courtRepository, times(2)).findById(1L);
+        verify(courtRepository, times(2)).findById(courtId);
         verify(scheduleRepository).save(any(CourtSchedule.class));
     }
 
     @Test
     void isOwner_Success() {
-        when(courtRepository.findById(anyLong())).thenReturn(Optional.of(court));
+        when(courtRepository.findById(any(UUID.class))).thenReturn(Optional.of(court));
 
-        boolean result = courtService.isOwner(1L, 1L);
+        boolean result = courtService.isOwner(courtId, userId);
 
         assertTrue(result);
-        verify(courtRepository).findById(1L);
+        verify(courtRepository).findById(courtId);
     }
 
     @Test
     void isOwner_Failure() {
-        when(courtRepository.findById(anyLong())).thenReturn(Optional.of(court));
+        when(courtRepository.findById(any(UUID.class))).thenReturn(Optional.of(court));
 
-        boolean result = courtService.isOwner(1L, 2L);
+        boolean result = courtService.isOwner(courtId, UUID.randomUUID());
 
         assertFalse(result);
-        verify(courtRepository).findById(1L);
+        verify(courtRepository).findById(courtId);
     }
 }

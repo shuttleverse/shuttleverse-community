@@ -12,6 +12,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.ZonedDateTime;
+import java.util.UUID;
 import lombok.Data;
 
 @Entity
@@ -22,13 +23,13 @@ public class OwnershipClaim {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "claim_id")
-  private Long id;
+  private UUID id;
 
   @Column(name = "entity_type", nullable = false, length = 50)
   private String entityType;
 
   @Column(name = "entity_id", nullable = false)
-  private Long entityId;
+  private UUID entityId;
 
   @Column(length = 2000)
   private String proof;

@@ -14,6 +14,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.UUID;
 import lombok.Data;
 
 @Entity
@@ -24,7 +25,7 @@ public class Stringer {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "stringer_id")
-  private Long id;
+  private UUID id;
 
   @ManyToOne
   @JoinColumn(name = "club_id")

@@ -6,14 +6,14 @@ import com.shuttleverse.community.model.User;
 import com.shuttleverse.community.repository.CoachRepository;
 import com.shuttleverse.community.repository.CoachScheduleRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,23 +34,30 @@ class CoachServiceTest {
     private Coach coach;
     private CoachSchedule schedule;
     private User user;
+    private UUID coachId;
+    private UUID userId;
+    private UUID scheduleId;
 
     @BeforeEach
     void setUp() {
+        coachId = UUID.randomUUID();
+        userId = UUID.randomUUID();
+        scheduleId = UUID.randomUUID();
+
         user = new User();
-        user.setId(1L);
+        user.setId(userId);
         user.setUsername("testuser");
 
         coach = new Coach();
-        coach.setId(1L);
+        coach.setId(coachId);
         coach.setName("Test Coach");
         coach.setOwner(user);
 
         schedule = new CoachSchedule();
-        schedule.setId(1L);
+        schedule.setId(scheduleId);
         schedule.setDayOfWeek(1);
         schedule.setStartTime("09:00");
-        schedule.setEndTime("17:00");
+        schedule.setEndTime("22:00");
         schedule.setUpvotes(0);
         schedule.setVerified(false);
         schedule.setSubmittedBy(user);
@@ -71,94 +78,94 @@ class CoachServiceTest {
 
     @Test
     void getCoach_Success() {
-        when(coachRepository.findById(anyLong())).thenReturn(Optional.of(coach));
+        when(coachRepository.findById(any(UUID.class))).thenReturn(Optional.of(coach));
 
-        Coach result = coachService.getCoach(1L);
+        Coach result = coachService.getCoach(coachId);
 
         assertNotNull(result);
         assertEquals(coach.getId(), result.getId());
         assertEquals(coach.getName(), result.getName());
-        verify(coachRepository).findById(1L);
+        verify(coachRepository).findById(coachId);
     }
 
     @Test
     void getCoach_NotFound() {
-        when(coachRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(coachRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> coachService.getCoach(1L));
-        verify(coachRepository).findById(1L);
+        assertThrows(EntityNotFoundException.class, () -> coachService.getCoach(coachId));
+        verify(coachRepository).findById(coachId);
     }
 
     @Test
     void addSchedule_Success() {
-        when(coachRepository.findById(anyLong())).thenReturn(Optional.of(coach));
+        when(coachRepository.findById(any(UUID.class))).thenReturn(Optional.of(coach));
         when(scheduleRepository.save(any(CoachSchedule.class))).thenReturn(schedule);
 
-        CoachSchedule result = coachService.addSchedule(1L, schedule);
+        CoachSchedule result = coachService.addSchedule(coachId, schedule);
 
         assertNotNull(result);
         assertEquals(schedule.getId(), result.getId());
         assertEquals(schedule.getDayOfWeek(), result.getDayOfWeek());
         assertEquals(schedule.getStartTime(), result.getStartTime());
         assertEquals(schedule.getEndTime(), result.getEndTime());
-        verify(coachRepository).findById(1L);
+        verify(coachRepository).findById(coachId);
         verify(scheduleRepository).save(any(CoachSchedule.class));
     }
 
     @Test
     void upvoteSchedule_Success() {
-        when(scheduleRepository.findById(anyLong())).thenReturn(Optional.of(schedule));
+        when(scheduleRepository.findById(any(UUID.class))).thenReturn(Optional.of(schedule));
         when(scheduleRepository.save(any(CoachSchedule.class))).thenReturn(schedule);
 
-        CoachSchedule result = coachService.upvoteSchedule(1L);
+        CoachSchedule result = coachService.upvoteSchedule(scheduleId);
 
         assertNotNull(result);
         assertEquals(1, result.getUpvotes());
-        verify(scheduleRepository).findById(1L);
+        verify(scheduleRepository).findById(scheduleId);
         verify(scheduleRepository).save(any(CoachSchedule.class));
     }
 
     @Test
     void upvoteSchedule_NotFound() {
-        when(scheduleRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(scheduleRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> coachService.upvoteSchedule(1L));
-        verify(scheduleRepository).findById(1L);
+        assertThrows(EntityNotFoundException.class, () -> coachService.upvoteSchedule(scheduleId));
+        verify(scheduleRepository).findById(scheduleId);
     }
 
     @Test
     void updateSchedule_Success() {
-        when(coachRepository.findById(anyLong())).thenReturn(Optional.of(coach));
+        when(coachRepository.findById(any(UUID.class))).thenReturn(Optional.of(coach));
         when(scheduleRepository.save(any(CoachSchedule.class))).thenReturn(schedule);
 
-        CoachSchedule result = coachService.updateSchedule(1L, 1L, schedule);
+        CoachSchedule result = coachService.updateSchedule(coachId, scheduleId, schedule);
 
         assertNotNull(result);
         assertEquals(schedule.getId(), result.getId());
         assertEquals(schedule.getDayOfWeek(), result.getDayOfWeek());
         assertEquals(schedule.getStartTime(), result.getStartTime());
         assertEquals(schedule.getEndTime(), result.getEndTime());
-        verify(coachRepository, times(2)).findById(1L);
+        verify(coachRepository, times(2)).findById(coachId);
         verify(scheduleRepository).save(any(CoachSchedule.class));
     }
 
     @Test
     void isOwner_Success() {
-        when(coachRepository.findById(anyLong())).thenReturn(Optional.of(coach));
+        when(coachRepository.findById(any(UUID.class))).thenReturn(Optional.of(coach));
 
-        boolean result = coachService.isOwner(1L, 1L);
+        boolean result = coachService.isOwner(coachId, userId);
 
         assertTrue(result);
-        verify(coachRepository).findById(1L);
+        verify(coachRepository).findById(coachId);
     }
 
     @Test
     void isOwner_Failure() {
-        when(coachRepository.findById(anyLong())).thenReturn(Optional.of(coach));
+        when(coachRepository.findById(any(UUID.class))).thenReturn(Optional.of(coach));
 
-        boolean result = coachService.isOwner(1L, 2L);
+        boolean result = coachService.isOwner(coachId, UUID.randomUUID());
 
         assertFalse(result);
-        verify(coachRepository).findById(1L);
+        verify(coachRepository).findById(coachId);
     }
 }
