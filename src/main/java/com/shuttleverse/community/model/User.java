@@ -2,13 +2,12 @@ package com.shuttleverse.community.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.ZonedDateTime;
+import java.util.UUID;
 import lombok.Data;
 
 @Entity
@@ -17,18 +16,14 @@ import lombok.Data;
 public class User {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "user_id")
-  private Long id;
+  private UUID id;
 
   @Column(nullable = false, unique = true, length = 50)
   private String username;
 
   @Column(nullable = false, unique = true, length = 100)
   private String email;
-
-  @Column(nullable = false, unique = true, length = 100)
-  private String sub;
 
   @Column(name = "bio")
   private String bio;

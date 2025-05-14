@@ -22,6 +22,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.UUID;
+
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
 class CoachControllerTest {
@@ -35,20 +37,27 @@ class CoachControllerTest {
     private Coach coach;
     private CoachSchedule schedule;
     private User user;
+    private UUID coachId;
+    private UUID userId;
+    private UUID scheduleId;
 
     @BeforeEach
     void setUp() {
+        coachId = UUID.randomUUID();
+        userId = UUID.randomUUID();
+        scheduleId = UUID.randomUUID();
+
         user = new User();
-        user.setId(1L);
+        user.setId(userId);
         user.setUsername("testuser");
 
         coach = new Coach();
-        coach.setId(1L);
+        coach.setId(coachId);
         coach.setName("Test Coach");
         coach.setOwner(user);
 
         schedule = new CoachSchedule();
-        schedule.setId(1L);
+        schedule.setId(scheduleId);
         schedule.setDayOfWeek(1);
         schedule.setStartTime("09:00");
         schedule.setEndTime("17:00");
@@ -70,86 +79,86 @@ class CoachControllerTest {
 
     @Test
     void getCoach_Success() {
-        when(coachService.getCoach(anyLong())).thenReturn(coach);
+        when(coachService.getCoach(any(UUID.class))).thenReturn(coach);
 
-        ResponseEntity<ApiResponse<Coach>> response = coachController.getCoach(1L);
+        ResponseEntity<ApiResponse<Coach>> response = coachController.getCoach(coachId);
 
         assertTrue(response.getBody().isSuccess());
         assertEquals(coach, response.getBody().getData());
-        verify(coachService).getCoach(1L);
+        verify(coachService).getCoach(coachId);
     }
 
     @Test
     void updateCoach_Success() {
-        when(coachService.updateCoach(anyLong(), any(Coach.class))).thenReturn(coach);
+        when(coachService.updateCoach(any(UUID.class), any(Coach.class))).thenReturn(coach);
 
-        ResponseEntity<ApiResponse<Coach>> response = coachController.updateCoach(1L, coach);
+        ResponseEntity<ApiResponse<Coach>> response = coachController.updateCoach(coachId, coach);
 
         assertTrue(response.getBody().isSuccess());
         assertEquals(coach, response.getBody().getData());
-        verify(coachService).updateCoach(1L, coach);
+        verify(coachService).updateCoach(coachId, coach);
     }
 
     @Test
     void deleteCoach_Success() {
-        doNothing().when(coachService).deleteCoach(anyLong());
+        doNothing().when(coachService).deleteCoach(any(UUID.class));
 
-        ResponseEntity<ApiResponse<Void>> response = coachController.deleteCoach(1L);
+        ResponseEntity<ApiResponse<Void>> response = coachController.deleteCoach(coachId);
 
         assertTrue(response.getBody().isSuccess());
-        assertEquals("Coach deleted successfully", response.getBody().getMessage());
-        verify(coachService).deleteCoach(1L);
+        verify(coachService).deleteCoach(coachId);
     }
 
     @Test
     void addSchedule_Success() {
-        when(coachService.addSchedule(anyLong(), any(CoachSchedule.class))).thenReturn(schedule);
+        when(coachService.addSchedule(any(UUID.class), any(CoachSchedule.class))).thenReturn(schedule);
 
-        ResponseEntity<ApiResponse<CoachSchedule>> response = coachController.addSchedule(1L, schedule);
+        ResponseEntity<ApiResponse<CoachSchedule>> response = coachController.addSchedule(coachId, schedule);
 
         assertTrue(response.getBody().isSuccess());
         assertEquals(schedule, response.getBody().getData());
-        verify(coachService).addSchedule(1L, schedule);
+        verify(coachService).addSchedule(coachId, schedule);
     }
 
     @Test
     void updateSchedule_Success() {
-        when(coachService.updateSchedule(anyLong(), anyLong(), any(CoachSchedule.class))).thenReturn(
+        when(coachService.updateSchedule(any(UUID.class), any(UUID.class), any(CoachSchedule.class))).thenReturn(
                 schedule);
 
-        ResponseEntity<ApiResponse<CoachSchedule>> response = coachController.updateSchedule(1L, 1L, schedule);
+        ResponseEntity<ApiResponse<CoachSchedule>> response = coachController.updateSchedule(coachId, scheduleId,
+                schedule);
 
         assertTrue(response.getBody().isSuccess());
         assertEquals(schedule, response.getBody().getData());
-        verify(coachService).updateSchedule(1L, 1L, schedule);
+        verify(coachService).updateSchedule(coachId, scheduleId, schedule);
     }
 
     @Test
     void upvoteSchedule_Success() {
-        when(coachService.upvoteSchedule(anyLong())).thenReturn(schedule);
+        when(coachService.upvoteSchedule(any(UUID.class))).thenReturn(schedule);
 
-        ResponseEntity<ApiResponse<CoachSchedule>> response = coachController.upvoteSchedule(1L, 1L);
+        ResponseEntity<ApiResponse<CoachSchedule>> response = coachController.upvoteSchedule(coachId, scheduleId);
 
         assertTrue(response.getBody().isSuccess());
         assertEquals(schedule, response.getBody().getData());
-        verify(coachService).upvoteSchedule(1L);
+        verify(coachService).upvoteSchedule(scheduleId);
     }
 
     @Test
     void addCoachWithSchedule_Success() {
         // Create coach schedule
         CoachSchedule schedule = new CoachSchedule();
-        schedule.setId(1L);
+        schedule.setId(UUID.randomUUID());
         schedule.setDayOfWeek(1); // Monday
         schedule.setStartTime("09:00");
-        schedule.setEndTime("17:00");
+        schedule.setEndTime("22:00");
         schedule.setUpvotes(0);
         schedule.setVerified(false);
         schedule.setSubmittedBy(user);
         schedule.setCoach(coach);
 
         when(coachService.createCoach(any(Coach.class))).thenReturn(coach);
-        when(coachService.addSchedule(anyLong(), any(CoachSchedule.class))).thenReturn(schedule);
+        when(coachService.addSchedule(any(UUID.class), any(CoachSchedule.class))).thenReturn(schedule);
 
         // Create coach
         ResponseEntity<ApiResponse<Coach>> coachResponse = coachController.createCoach(coach);
@@ -157,34 +166,34 @@ class CoachControllerTest {
         assertEquals(coach, coachResponse.getBody().getData());
 
         // Add schedule
-        ResponseEntity<ApiResponse<CoachSchedule>> scheduleResponse = coachController.addSchedule(1L, schedule);
+        ResponseEntity<ApiResponse<CoachSchedule>> scheduleResponse = coachController.addSchedule(coachId, schedule);
         assertTrue(scheduleResponse.getBody().isSuccess());
         assertEquals(schedule, scheduleResponse.getBody().getData());
 
         verify(coachService).createCoach(any(Coach.class));
-        verify(coachService).addSchedule(anyLong(), any(CoachSchedule.class));
+        verify(coachService).addSchedule(any(UUID.class), any(CoachSchedule.class));
     }
 
     @Test
     void upvoteCoachSchedule_Success() {
         CoachSchedule schedule = new CoachSchedule();
-        schedule.setId(1L);
+        schedule.setId(scheduleId);
         schedule.setDayOfWeek(1);
         schedule.setStartTime("09:00");
-        schedule.setEndTime("17:00");
+        schedule.setEndTime("22:00");
         schedule.setUpvotes(1); // After upvote
         schedule.setVerified(false);
         schedule.setSubmittedBy(user);
         schedule.setCoach(coach);
 
-        when(coachService.upvoteSchedule(anyLong())).thenReturn(schedule);
+        when(coachService.upvoteSchedule(any(UUID.class))).thenReturn(schedule);
 
-        ResponseEntity<ApiResponse<CoachSchedule>> response = coachController.upvoteSchedule(1L, 1L);
+        ResponseEntity<ApiResponse<CoachSchedule>> response = coachController.upvoteSchedule(coachId, scheduleId);
 
         assertTrue(response.getBody().isSuccess());
         assertEquals(schedule, response.getBody().getData());
         assertEquals(1, response.getBody().getData().getUpvotes());
-        verify(coachService).upvoteSchedule(1L);
+        verify(coachService).upvoteSchedule(scheduleId);
     }
 
     @Test
@@ -192,18 +201,18 @@ class CoachControllerTest {
         CoachSchedule newSchedule = new CoachSchedule();
         newSchedule.setDayOfWeek(2); // Tuesday
         newSchedule.setStartTime("10:00");
-        newSchedule.setEndTime("18:00");
+        newSchedule.setEndTime("21:00");
         newSchedule.setUpvotes(0);
         newSchedule.setVerified(false);
         newSchedule.setSubmittedBy(user);
         newSchedule.setCoach(coach);
 
-        when(coachService.addSchedule(anyLong(), any(CoachSchedule.class))).thenReturn(newSchedule);
+        when(coachService.addSchedule(any(UUID.class), any(CoachSchedule.class))).thenReturn(newSchedule);
 
-        ResponseEntity<ApiResponse<CoachSchedule>> response = coachController.addSchedule(1L, newSchedule);
+        ResponseEntity<ApiResponse<CoachSchedule>> response = coachController.addSchedule(coachId, newSchedule);
 
         assertTrue(response.getBody().isSuccess());
         assertEquals(newSchedule, response.getBody().getData());
-        verify(coachService).addSchedule(1L, newSchedule);
+        verify(coachService).addSchedule(coachId, newSchedule);
     }
 }

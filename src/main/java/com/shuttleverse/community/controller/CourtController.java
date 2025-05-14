@@ -2,6 +2,7 @@ package com.shuttleverse.community.controller;
 
 import com.shuttleverse.community.api.ApiResponse;
 import com.shuttleverse.community.model.Court;
+import com.shuttleverse.community.model.CourtPrice;
 import com.shuttleverse.community.model.CourtSchedule;
 import com.shuttleverse.community.service.CourtService;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +18,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.UUID;
+
 @RestController
-@RequestMapping("/api/v1/courts")
+@RequestMapping("/court")
 @RequiredArgsConstructor
 public class CourtController {
 
@@ -30,37 +33,50 @@ public class CourtController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ApiResponse<Court>> getCourt(@PathVariable Long id) {
-    return ResponseEntity.ok(ApiResponse.success(courtService.getCourt(id)));
+  public ResponseEntity<ApiResponse<Court>> getCourt(@PathVariable UUID id) {
+    Court court = courtService.getCourt(id);
+    return ResponseEntity.ok(ApiResponse.success(court));
   }
 
   @PutMapping("/{id}")
-  @PreAuthorize("@courtService.isOwner(#id, authentication.principal)")
+  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<Court>> updateCourt(
-      @PathVariable Long id,
+      @PathVariable UUID id,
       @Validated @RequestBody Court court) {
-    return ResponseEntity.ok(ApiResponse.success(courtService.updateCourt(id, court)));
+    Court updatedCourt = courtService.updateCourt(id, court);
+    return ResponseEntity.ok(ApiResponse.success(updatedCourt));
   }
 
   @DeleteMapping("/{id}")
-  @PreAuthorize("@courtService.isOwner(#id, authentication.principal)")
-  public ResponseEntity<ApiResponse<Void>> deleteCourt(@PathVariable Long id) {
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<ApiResponse<Void>> deleteCourt(@PathVariable UUID id) {
     courtService.deleteCourt(id);
-    return ResponseEntity.ok(ApiResponse.success("Court deleted successfully", null));
+    return ResponseEntity.ok(ApiResponse.success(null));
   }
 
   @PostMapping("/{id}/schedule")
+  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<CourtSchedule>> addSchedule(
-      @PathVariable Long id,
+      @PathVariable UUID id,
       @Validated @RequestBody CourtSchedule schedule) {
-    return ResponseEntity.ok(ApiResponse.success(courtService.addSchedule(id, schedule)));
+    CourtSchedule newSchedule = courtService.addSchedule(id, schedule);
+    return ResponseEntity.ok(ApiResponse.success(newSchedule));
+  }
+
+  @PostMapping("/{id}/price")
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<ApiResponse<CourtPrice>> addPrice(
+      @PathVariable UUID id,
+      @Validated @RequestBody CourtPrice price) {
+    CourtPrice newPrice = courtService.addPrice(id, price);
+    return ResponseEntity.ok(ApiResponse.success(newPrice));
   }
 
   @PutMapping("/{id}/schedule/{scheduleId}")
   @PreAuthorize("@courtService.isOwner(#id, authentication.principal)")
   public ResponseEntity<ApiResponse<CourtSchedule>> updateSchedule(
-      @PathVariable Long id,
-      @PathVariable Long scheduleId,
+      @PathVariable UUID id,
+      @PathVariable UUID scheduleId,
       @Validated @RequestBody CourtSchedule schedule) {
     return ResponseEntity.ok(
         ApiResponse.success(courtService.updateSchedule(id, scheduleId, schedule)));
@@ -68,8 +84,8 @@ public class CourtController {
 
   @PostMapping("/{id}/upvote-schedule/{scheduleId}")
   public ResponseEntity<ApiResponse<CourtSchedule>> upvoteSchedule(
-      @PathVariable Long id,
-      @PathVariable Long scheduleId) {
+      @PathVariable UUID id,
+      @PathVariable UUID scheduleId) {
     return ResponseEntity.ok(ApiResponse.success(courtService.upvoteSchedule(scheduleId)));
   }
 }

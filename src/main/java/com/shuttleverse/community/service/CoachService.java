@@ -5,6 +5,7 @@ import com.shuttleverse.community.model.CoachSchedule;
 import com.shuttleverse.community.repository.CoachRepository;
 import com.shuttleverse.community.repository.CoachScheduleRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -22,13 +23,13 @@ public class CoachService {
     return coachRepository.save(coach);
   }
 
-  public Coach getCoach(Long id) {
+  public Coach getCoach(UUID id) {
     return coachRepository.findById(id)
         .orElseThrow(() -> new EntityNotFoundException("Coach not found with id: " + id));
   }
 
   @Transactional
-  public Coach updateCoach(Long id, Coach coach) {
+  public Coach updateCoach(UUID id, Coach coach) {
     if (!isOwner(id, coach.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can update coach information");
     }
@@ -37,7 +38,7 @@ public class CoachService {
   }
 
   @Transactional
-  public void deleteCoach(Long id) {
+  public void deleteCoach(UUID id) {
     Coach coach = getCoach(id);
     if (!isOwner(id, coach.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can delete the coach");
@@ -46,14 +47,14 @@ public class CoachService {
   }
 
   @Transactional
-  public CoachSchedule addSchedule(Long coachId, CoachSchedule schedule) {
+  public CoachSchedule addSchedule(UUID coachId, CoachSchedule schedule) {
     Coach coach = getCoach(coachId);
     schedule.setCoach(coach);
     return scheduleRepository.save(schedule);
   }
 
   @Transactional
-  public CoachSchedule updateSchedule(Long coachId, Long scheduleId, CoachSchedule schedule) {
+  public CoachSchedule updateSchedule(UUID coachId, UUID scheduleId, CoachSchedule schedule) {
     Coach coach = getCoach(coachId);
     if (!isOwner(coachId, coach.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can update schedule");
@@ -64,14 +65,14 @@ public class CoachService {
   }
 
   @Transactional
-  public CoachSchedule upvoteSchedule(Long scheduleId) {
+  public CoachSchedule upvoteSchedule(UUID scheduleId) {
     CoachSchedule schedule = scheduleRepository.findById(scheduleId)
         .orElseThrow(() -> new EntityNotFoundException("Schedule not found"));
     schedule.setUpvotes(schedule.getUpvotes() + 1);
     return scheduleRepository.save(schedule);
   }
 
-  public boolean isOwner(Long coachId, Long userId) {
+  public boolean isOwner(UUID coachId, UUID userId) {
     Coach coach = getCoach(coachId);
     return coach.getOwner() != null && coach.getOwner().getId().equals(userId);
   }

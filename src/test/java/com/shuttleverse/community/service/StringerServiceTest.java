@@ -3,17 +3,17 @@ package com.shuttleverse.community.service;
 import com.shuttleverse.community.model.Stringer;
 import com.shuttleverse.community.model.StringerPrice;
 import com.shuttleverse.community.model.User;
-import com.shuttleverse.community.repository.StringerRepository;
 import com.shuttleverse.community.repository.StringerPriceRepository;
+import com.shuttleverse.community.repository.StringerRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,26 +34,32 @@ class StringerServiceTest {
     private Stringer stringer;
     private StringerPrice price;
     private User user;
+    private UUID stringerId;
+    private UUID userId;
+    private UUID priceId;
 
     @BeforeEach
     void setUp() {
+        stringerId = UUID.randomUUID();
+        userId = UUID.randomUUID();
+        priceId = UUID.randomUUID();
+
         user = new User();
-        user.setId(1L);
+        user.setId(userId);
         user.setUsername("testuser");
 
         stringer = new Stringer();
-        stringer.setId(1L);
+        stringer.setId(stringerId);
         stringer.setName("Test Stringer");
         stringer.setOwner(user);
 
         price = new StringerPrice();
-        price.setId(1L);
-        price.setStringName("Yonex BG65");
-        price.setPrice(20.0);
-        price.setStringerId(1L);
+        price.setId(priceId);
+        price.setStringName("Test String");
+        price.setPrice(30.0);
         price.setUpvotes(0);
         price.setIsVerified(false);
-        price.setSubmittedBy(user);
+        price.setStringer(stringer);
     }
 
     @Test
@@ -70,92 +76,92 @@ class StringerServiceTest {
 
     @Test
     void getStringer_Success() {
-        when(stringerRepository.findById(anyLong())).thenReturn(Optional.of(stringer));
+        when(stringerRepository.findById(any(UUID.class))).thenReturn(Optional.of(stringer));
 
-        Stringer result = stringerService.getStringer(1L);
+        Stringer result = stringerService.getStringer(stringerId);
 
         assertNotNull(result);
         assertEquals(stringer.getId(), result.getId());
         assertEquals(stringer.getName(), result.getName());
-        verify(stringerRepository).findById(1L);
+        verify(stringerRepository).findById(stringerId);
     }
 
     @Test
     void getStringer_NotFound() {
-        when(stringerRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(stringerRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> stringerService.getStringer(1L));
-        verify(stringerRepository).findById(1L);
+        assertThrows(EntityNotFoundException.class, () -> stringerService.getStringer(stringerId));
+        verify(stringerRepository).findById(stringerId);
     }
 
     @Test
     void addPrice_Success() {
-        when(stringerRepository.findById(anyLong())).thenReturn(Optional.of(stringer));
+        when(stringerRepository.findById(any(UUID.class))).thenReturn(Optional.of(stringer));
         when(priceRepository.save(any(StringerPrice.class))).thenReturn(price);
 
-        StringerPrice result = stringerService.addPrice(1L, price);
+        StringerPrice result = stringerService.addPrice(stringerId, price);
 
         assertNotNull(result);
         assertEquals(price.getId(), result.getId());
         assertEquals(price.getStringName(), result.getStringName());
         assertEquals(price.getPrice(), result.getPrice());
-        verify(stringerRepository).findById(1L);
+        verify(stringerRepository).findById(stringerId);
+        verify(priceRepository).save(any(StringerPrice.class));
+    }
+
+    @Test
+    void updatePrice_Success() {
+        when(stringerRepository.findById(any(UUID.class))).thenReturn(Optional.of(stringer));
+        when(priceRepository.save(any(StringerPrice.class))).thenReturn(price);
+
+        StringerPrice result = stringerService.updatePrice(stringerId, priceId, price);
+
+        assertNotNull(result);
+        assertEquals(price.getId(), result.getId());
+        assertEquals(price.getStringName(), result.getStringName());
+        assertEquals(price.getPrice(), result.getPrice());
+        verify(stringerRepository, times(2)).findById(stringerId);
         verify(priceRepository).save(any(StringerPrice.class));
     }
 
     @Test
     void upvotePrice_Success() {
-        when(priceRepository.findById(anyLong())).thenReturn(Optional.of(price));
+        when(priceRepository.findById(any(UUID.class))).thenReturn(Optional.of(price));
         when(priceRepository.save(any(StringerPrice.class))).thenReturn(price);
 
-        StringerPrice result = stringerService.upvotePrice(1L);
+        StringerPrice result = stringerService.upvotePrice(priceId);
 
         assertNotNull(result);
         assertEquals(1, result.getUpvotes());
-        verify(priceRepository).findById(1L);
+        verify(priceRepository).findById(priceId);
         verify(priceRepository).save(any(StringerPrice.class));
     }
 
     @Test
     void upvotePrice_NotFound() {
-        when(priceRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(priceRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> stringerService.upvotePrice(1L));
-        verify(priceRepository).findById(1L);
-    }
-
-    @Test
-    void updatePrice_Success() {
-        when(stringerRepository.findById(anyLong())).thenReturn(Optional.of(stringer));
-        when(priceRepository.save(any(StringerPrice.class))).thenReturn(price);
-
-        StringerPrice result = stringerService.updatePrice(1L, 1L, price);
-
-        assertNotNull(result);
-        assertEquals(price.getId(), result.getId());
-        assertEquals(price.getStringName(), result.getStringName());
-        assertEquals(price.getPrice(), result.getPrice());
-        verify(stringerRepository, times(2)).findById(1L);
-        verify(priceRepository).save(any(StringerPrice.class));
+        assertThrows(EntityNotFoundException.class, () -> stringerService.upvotePrice(priceId));
+        verify(priceRepository).findById(priceId);
     }
 
     @Test
     void isOwner_Success() {
-        when(stringerRepository.findById(anyLong())).thenReturn(Optional.of(stringer));
+        when(stringerRepository.findById(any(UUID.class))).thenReturn(Optional.of(stringer));
 
-        boolean result = stringerService.isOwner(1L, 1L);
+        boolean result = stringerService.isOwner(stringerId, userId);
 
         assertTrue(result);
-        verify(stringerRepository).findById(1L);
+        verify(stringerRepository).findById(stringerId);
     }
 
     @Test
     void isOwner_Failure() {
-        when(stringerRepository.findById(anyLong())).thenReturn(Optional.of(stringer));
+        when(stringerRepository.findById(any(UUID.class))).thenReturn(Optional.of(stringer));
 
-        boolean result = stringerService.isOwner(1L, 2L);
+        boolean result = stringerService.isOwner(stringerId, UUID.randomUUID());
 
         assertFalse(result);
-        verify(stringerRepository).findById(1L);
+        verify(stringerRepository).findById(stringerId);
     }
 }
