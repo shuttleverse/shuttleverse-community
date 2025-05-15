@@ -15,14 +15,14 @@ public class UserService {
   private final UserRepository userRepository;
 
   @Transactional
-  public User createOrUpdateUser(String sub, String email, String username) {
+  public User createOrUpdateUser(String sub, String email, User userDetails) {
     UUID userId = UUID.nameUUIDFromBytes(sub.getBytes());
     Optional<User> optionalUser = userRepository.findById(userId);
     User user = optionalUser.orElse(new User());
 
     user.setId(userId);
     user.setEmail(email);
-    user.setUsername(username);
+    user.setUsername(userDetails.getUsername());
     return userRepository.save(user);
   }
 

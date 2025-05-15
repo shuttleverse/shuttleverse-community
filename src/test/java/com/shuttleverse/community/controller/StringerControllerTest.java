@@ -182,14 +182,14 @@ class StringerControllerTest {
     price.setStringName("Yonex BG65");
     price.setPrice(20.0);
     price.setStringerId(stringerId);
-    price.setUpvotes(1); // After upvote
+    price.setUpvotes(1);
     price.setIsVerified(false);
     price.setSubmittedBy(user);
 
     when(stringerService.upvotePrice(any(UUID.class))).thenReturn(price);
 
     ResponseEntity<ApiResponse<StringerPrice>> response =
-        stringerController.upvotePrice(stringerId, priceId);
+        stringerController.upvotePrice(priceId);
 
     assertTrue(response.getBody().isSuccess());
     assertEquals(price, response.getBody().getData());
