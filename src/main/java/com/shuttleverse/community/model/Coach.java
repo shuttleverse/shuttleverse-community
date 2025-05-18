@@ -1,5 +1,6 @@
 package com.shuttleverse.community.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -51,6 +52,7 @@ public class Coach {
   private String contactPhone;
 
   @OneToMany(mappedBy = "coach", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  @JsonManagedReference("coach-schedule")
   private List<CoachSchedule> scheduleList;
 
   @Column(name = "created_at", nullable = false)

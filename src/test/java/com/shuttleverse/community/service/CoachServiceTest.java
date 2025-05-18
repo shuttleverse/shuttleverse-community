@@ -6,6 +6,7 @@ import com.shuttleverse.community.model.User;
 import com.shuttleverse.community.repository.CoachRepository;
 import com.shuttleverse.community.repository.CoachScheduleRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -68,11 +70,12 @@ class CoachServiceTest {
     void createCoach_Success() {
         when(coachRepository.save(any(Coach.class))).thenReturn(coach);
 
-        Coach result = coachService.createCoach(coach);
+        Coach result = coachService.createCoach(coach, user);
 
         assertNotNull(result);
         assertEquals(coach.getId(), result.getId());
         assertEquals(coach.getName(), result.getName());
+        assertEquals(user, result.getOwner());
         verify(coachRepository).save(any(Coach.class));
     }
 
@@ -98,18 +101,20 @@ class CoachServiceTest {
 
     @Test
     void addSchedule_Success() {
+        List<CoachSchedule> schedules = List.of(schedule);
         when(coachRepository.findById(any(UUID.class))).thenReturn(Optional.of(coach));
-        when(scheduleRepository.save(any(CoachSchedule.class))).thenReturn(schedule);
+        when(scheduleRepository.saveAll(anyList())).thenReturn(schedules);
 
-        CoachSchedule result = coachService.addSchedule(coachId, schedule);
+        List<CoachSchedule> results = coachService.addSchedule(coachId, schedules);
 
-        assertNotNull(result);
-        assertEquals(schedule.getId(), result.getId());
-        assertEquals(schedule.getDayOfWeek(), result.getDayOfWeek());
-        assertEquals(schedule.getStartTime(), result.getStartTime());
-        assertEquals(schedule.getEndTime(), result.getEndTime());
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        assertEquals(schedule.getId(), results.get(0).getId());
+        assertEquals(schedule.getDayOfWeek(), results.get(0).getDayOfWeek());
+        assertEquals(schedule.getStartTime(), results.get(0).getStartTime());
+        assertEquals(schedule.getEndTime(), results.get(0).getEndTime());
         verify(coachRepository).findById(coachId);
-        verify(scheduleRepository).save(any(CoachSchedule.class));
+        verify(scheduleRepository).saveAll(anyList());
     }
 
     @Test

@@ -3,12 +3,19 @@ package com.shuttleverse.community.service;
 import com.shuttleverse.community.model.Court;
 import com.shuttleverse.community.model.CourtPrice;
 import com.shuttleverse.community.model.CourtSchedule;
+import com.shuttleverse.community.model.User;
 import com.shuttleverse.community.repository.CourtPriceRepository;
 import com.shuttleverse.community.repository.CourtRepository;
 import com.shuttleverse.community.repository.CourtScheduleRepository;
+import com.shuttleverse.community.util.SpecificationBuilder;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,13 +29,19 @@ public class CourtService {
   private final CourtPriceRepository priceRepository;
 
   @Transactional
-  public Court createCourt(Court court) {
+  public Court createCourt(User creator, Court court) {
+    court.setCreator(creator);
     return courtRepository.save(court);
   }
 
   public Court getCourt(UUID id) {
     return courtRepository.findById(id)
         .orElseThrow(() -> new EntityNotFoundException("Court not found with id: " + id));
+  }
+
+  public Page<Court> getAllCourts(Map<String, String> filters, Pageable pageable) {
+    Specification<Court> spec = SpecificationBuilder.buildSpecification(filters);
+    return courtRepository.findAll(spec, pageable);
   }
 
   @Transactional
@@ -50,10 +63,13 @@ public class CourtService {
   }
 
   @Transactional
-  public CourtSchedule addSchedule(UUID courtId, CourtSchedule schedule) {
+  public List<CourtSchedule> addSchedule(UUID courtId, List<CourtSchedule> schedule) {
     Court court = getCourt(courtId);
-    schedule.setCourt(court);
-    return scheduleRepository.save(schedule);
+    for (CourtSchedule courtSchedule : schedule) {
+      courtSchedule.setCourt(court);
+    }
+
+    return scheduleRepository.saveAll(schedule);
   }
 
   @Transactional
@@ -76,10 +92,12 @@ public class CourtService {
   }
 
   @Transactional
-  public CourtPrice addPrice(UUID courtId, CourtPrice price) {
+  public List<CourtPrice> addPrice(UUID courtId, List<CourtPrice> prices) {
     Court court = getCourt(courtId);
-    price.setCourt(court);
-    return priceRepository.save(price);
+    for (CourtPrice price : prices) {
+      price.setCourt(court);
+    }
+    return priceRepository.saveAll(prices);
   }
 
   public boolean isOwner(UUID courtId, UUID userId) {
