@@ -1,5 +1,6 @@
 package com.shuttleverse.community.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -27,6 +28,7 @@ public class CoachSchedule {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "coach_id", nullable = false)
+  @JsonBackReference("coach-schedule")
   private Coach coach;
 
   @Column(name = "day_of_week", nullable = false)
@@ -45,10 +47,10 @@ public class CoachSchedule {
   private ZonedDateTime updatedAt;
 
   @Column(name = "upvotes", nullable = false)
-  private Integer upvotes;
+  private Integer upvotes = 0;
 
   @Column(name = "is_verified", nullable = false)
-  private boolean isVerified;
+  private boolean isVerified = false;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "submitted_by")

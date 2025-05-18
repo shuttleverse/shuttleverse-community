@@ -1,5 +1,6 @@
 package com.shuttleverse.community.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -26,6 +27,7 @@ public class CourtSchedule {
 
   @ManyToOne
   @JoinColumn(name = "court_id")
+  @JsonBackReference("court-schedule")
   private Court court;
 
   @Column(name = "day_of_week", nullable = false)
