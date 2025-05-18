@@ -1,5 +1,6 @@
 package com.shuttleverse.community.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -42,13 +43,14 @@ public class StringerPrice {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "stringer_id")
+  @JsonBackReference("stringer-price")
   private Stringer stringer;
 
   @Column(name = "upvotes", nullable = false)
-  private Integer upvotes;
+  private Integer upvotes = 0;
 
   @Column(name = "is_verified", nullable = false)
-  private Boolean isVerified;
+  private Boolean isVerified = false;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "submitted_by")

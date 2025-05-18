@@ -6,6 +6,7 @@ import com.shuttleverse.community.model.User;
 import com.shuttleverse.community.repository.StringerPriceRepository;
 import com.shuttleverse.community.repository.StringerRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -66,11 +68,12 @@ class StringerServiceTest {
     void createStringer_Success() {
         when(stringerRepository.save(any(Stringer.class))).thenReturn(stringer);
 
-        Stringer result = stringerService.createStringer(stringer);
+        Stringer result = stringerService.createStringer(stringer, user);
 
         assertNotNull(result);
         assertEquals(stringer.getId(), result.getId());
         assertEquals(stringer.getName(), result.getName());
+        assertEquals(user, result.getOwner());
         verify(stringerRepository).save(any(Stringer.class));
     }
 
@@ -96,17 +99,19 @@ class StringerServiceTest {
 
     @Test
     void addPrice_Success() {
+        List<StringerPrice> prices = List.of(price);
         when(stringerRepository.findById(any(UUID.class))).thenReturn(Optional.of(stringer));
-        when(priceRepository.save(any(StringerPrice.class))).thenReturn(price);
+        when(priceRepository.saveAll(anyList())).thenReturn(prices);
 
-        StringerPrice result = stringerService.addPrice(stringerId, price);
+        List<StringerPrice> results = stringerService.addPrice(stringerId, prices);
 
-        assertNotNull(result);
-        assertEquals(price.getId(), result.getId());
-        assertEquals(price.getStringName(), result.getStringName());
-        assertEquals(price.getPrice(), result.getPrice());
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        assertEquals(price.getId(), results.get(0).getId());
+        assertEquals(price.getStringName(), results.get(0).getStringName());
+        assertEquals(price.getPrice(), results.get(0).getPrice());
         verify(stringerRepository).findById(stringerId);
-        verify(priceRepository).save(any(StringerPrice.class));
+        verify(priceRepository).saveAll(anyList());
     }
 
     @Test

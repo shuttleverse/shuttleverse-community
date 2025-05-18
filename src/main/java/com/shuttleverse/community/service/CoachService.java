@@ -2,11 +2,18 @@ package com.shuttleverse.community.service;
 
 import com.shuttleverse.community.model.Coach;
 import com.shuttleverse.community.model.CoachSchedule;
+import com.shuttleverse.community.model.User;
 import com.shuttleverse.community.repository.CoachRepository;
 import com.shuttleverse.community.repository.CoachScheduleRepository;
+import com.shuttleverse.community.util.SpecificationBuilder;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,13 +26,19 @@ public class CoachService {
   private final CoachScheduleRepository scheduleRepository;
 
   @Transactional
-  public Coach createCoach(Coach coach) {
+  public Coach createCoach(Coach coach, User creator) {
+    coach.setOwner(creator);
     return coachRepository.save(coach);
   }
 
   public Coach getCoach(UUID id) {
     return coachRepository.findById(id)
         .orElseThrow(() -> new EntityNotFoundException("Coach not found with id: " + id));
+  }
+
+  public Page<Coach> getAllCoaches(Map<String, String> filters, Pageable pageable) {
+    Specification<Coach> spec = SpecificationBuilder.buildSpecification(filters);
+    return coachRepository.findAll(spec, pageable);
   }
 
   @Transactional
@@ -47,10 +60,12 @@ public class CoachService {
   }
 
   @Transactional
-  public CoachSchedule addSchedule(UUID coachId, CoachSchedule schedule) {
+  public List<CoachSchedule> addSchedule(UUID coachId, List<CoachSchedule> schedules) {
     Coach coach = getCoach(coachId);
-    schedule.setCoach(coach);
-    return scheduleRepository.save(schedule);
+    for (CoachSchedule schedule : schedules) {
+      schedule.setCoach(coach);
+    }
+    return scheduleRepository.saveAll(schedules);
   }
 
   @Transactional
