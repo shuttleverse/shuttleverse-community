@@ -6,6 +6,7 @@ import com.shuttleverse.community.model.CoachSchedule;
 import com.shuttleverse.community.model.User;
 import com.shuttleverse.community.service.CoachService;
 import com.shuttleverse.community.service.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +30,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import jakarta.persistence.EntityNotFoundException;
 
 @RestController
 @RequestMapping("/coach")
@@ -101,8 +101,13 @@ public class CoachController {
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<List<CoachSchedule>>> addSchedule(
       @PathVariable String id,
-      @Validated @RequestBody List<CoachSchedule> schedules) {
-    List<CoachSchedule> newSchedules = coachService.addSchedule(UUID.fromString(id), schedules);
+      @Validated @RequestBody List<CoachSchedule> schedules, @AuthenticationPrincipal Jwt jwt) {
+
+    String sub = jwt.getSubject();
+    User creator = userService.findBySub(sub)
+        .orElseThrow(() -> new EntityNotFoundException("User not found"));
+    List<CoachSchedule> newSchedules = coachService.addSchedule(creator, UUID.fromString(id),
+        schedules);
     return ResponseEntity.ok(ApiResponse.success(newSchedules));
   }
 
@@ -112,7 +117,8 @@ public class CoachController {
       @PathVariable String id,
       @PathVariable String scheduleId,
       @Validated @RequestBody CoachSchedule schedule) {
-    CoachSchedule updatedSchedule = coachService.updateSchedule(UUID.fromString(id), UUID.fromString(scheduleId),
+    CoachSchedule updatedSchedule = coachService.updateSchedule(UUID.fromString(id),
+        UUID.fromString(scheduleId),
         schedule);
     return ResponseEntity.ok(ApiResponse.success(updatedSchedule));
   }
@@ -121,6 +127,7 @@ public class CoachController {
   public ResponseEntity<ApiResponse<CoachSchedule>> upvoteSchedule(
       @PathVariable String id,
       @PathVariable String scheduleId) {
-    return ResponseEntity.ok(ApiResponse.success(coachService.upvoteSchedule(UUID.fromString(scheduleId))));
+    return ResponseEntity.ok(
+        ApiResponse.success(coachService.upvoteSchedule(UUID.fromString(scheduleId))));
   }
 }

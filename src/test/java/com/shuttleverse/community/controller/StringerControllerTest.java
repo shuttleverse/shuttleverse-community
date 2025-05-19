@@ -130,16 +130,18 @@ class StringerControllerTest {
   @Test
   void addPrice_Success() {
     List<StringerPrice> prices = List.of(price);
-    doReturn(prices).when(stringerService).addPrice(any(UUID.class), any(List.class));
+    when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
+    doReturn(prices).when(stringerService).addPrice(any(User.class), any(UUID.class), any(List.class));
 
     ResponseEntity<ApiResponse<List<StringerPrice>>> response = stringerController.addPrice(
         stringerId.toString(),
-        prices);
+        prices,
+        jwt);
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
     assertEquals(1, response.getBody().getData().size());
     assertEquals(price, response.getBody().getData().get(0));
-    verify(stringerService).addPrice(stringerId, prices);
+    verify(stringerService).addPrice(any(User.class), any(UUID.class), any(List.class));
   }
 
   @Test
@@ -179,17 +181,19 @@ class StringerControllerTest {
     price2.setSubmittedBy(user);
 
     List<StringerPrice> allPrices = List.of(price1, price2);
-    doReturn(allPrices).when(stringerService).addPrice(any(UUID.class), any(List.class));
+    when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
+    doReturn(allPrices).when(stringerService).addPrice(any(User.class), any(UUID.class), any(List.class));
 
     ResponseEntity<ApiResponse<List<StringerPrice>>> response = stringerController.addPrice(
         stringerId.toString(),
-        allPrices);
+        allPrices,
+        jwt);
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
     assertEquals(2, response.getBody().getData().size());
     assertEquals(price1, response.getBody().getData().get(0));
     assertEquals(price2, response.getBody().getData().get(1));
-    verify(stringerService).addPrice(stringerId, allPrices);
+    verify(stringerService).addPrice(any(User.class), any(UUID.class), any(List.class));
   }
 
   @Test
@@ -226,15 +230,17 @@ class StringerControllerTest {
     newPrice.setSubmittedBy(user);
 
     List<StringerPrice> prices = List.of(newPrice);
-    doReturn(prices).when(stringerService).addPrice(any(UUID.class), any(List.class));
+    when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
+    doReturn(prices).when(stringerService).addPrice(any(User.class), any(UUID.class), any(List.class));
 
     ResponseEntity<ApiResponse<List<StringerPrice>>> response = stringerController.addPrice(
         stringerId.toString(),
-        prices);
+        prices,
+        jwt);
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
     assertEquals(1, response.getBody().getData().size());
     assertEquals(newPrice, response.getBody().getData().get(0));
-    verify(stringerService).addPrice(stringerId, prices);
+    verify(stringerService).addPrice(any(User.class), any(UUID.class), any(List.class));
   }
 }

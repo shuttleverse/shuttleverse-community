@@ -60,9 +60,10 @@ public class StringerService {
   }
 
   @Transactional
-  public List<StringerPrice> addPrice(UUID stringerId, List<StringerPrice> prices) {
+  public List<StringerPrice> addPrice(User creator, UUID stringerId, List<StringerPrice> prices) {
     Stringer stringer = getStringer(stringerId);
     for (StringerPrice price : prices) {
+      price.setSubmittedBy(creator);
       price.setStringer(stringer);
     }
     return priceRepository.saveAll(prices);

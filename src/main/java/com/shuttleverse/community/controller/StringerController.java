@@ -3,8 +3,10 @@ package com.shuttleverse.community.controller;
 import com.shuttleverse.community.api.ApiResponse;
 import com.shuttleverse.community.model.Stringer;
 import com.shuttleverse.community.model.StringerPrice;
+import com.shuttleverse.community.model.User;
 import com.shuttleverse.community.service.StringerService;
 import com.shuttleverse.community.service.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,10 +30,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
-import com.shuttleverse.community.model.User;
-import jakarta.persistence.EntityNotFoundException;
 
 @RestController
 @RequestMapping("/stringer")
@@ -72,7 +72,8 @@ public class StringerController {
     User creator = userService.findBySub(sub)
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-    return ResponseEntity.ok(ApiResponse.success(stringerService.createStringer(stringer, creator)));
+    return ResponseEntity.ok(
+        ApiResponse.success(stringerService.createStringer(stringer, creator)));
   }
 
   @GetMapping("/{id}")
@@ -85,7 +86,8 @@ public class StringerController {
   public ResponseEntity<ApiResponse<Stringer>> updateStringer(
       @PathVariable String id,
       @Validated @RequestBody Stringer stringer) {
-    return ResponseEntity.ok(ApiResponse.success(stringerService.updateStringer(UUID.fromString(id), stringer)));
+    return ResponseEntity.ok(
+        ApiResponse.success(stringerService.updateStringer(UUID.fromString(id), stringer)));
   }
 
   @DeleteMapping("/{id}")
@@ -98,8 +100,14 @@ public class StringerController {
   @PostMapping("/{id}/price")
   public ResponseEntity<ApiResponse<List<StringerPrice>>> addPrice(
       @PathVariable String id,
-      @Validated @RequestBody List<StringerPrice> prices) {
-    return ResponseEntity.ok(ApiResponse.success(stringerService.addPrice(UUID.fromString(id), prices)));
+      @Validated @RequestBody List<StringerPrice> prices,
+      @AuthenticationPrincipal Jwt jwt) {
+    String sub = jwt.getSubject();
+
+    User creator = userService.findBySub(sub)
+        .orElseThrow(() -> new EntityNotFoundException("User not found"));
+    return ResponseEntity.ok(
+        ApiResponse.success(stringerService.addPrice(creator, UUID.fromString(id), prices)));
   }
 
   @PutMapping("/{id}/price/{priceId}")
@@ -109,12 +117,14 @@ public class StringerController {
       @PathVariable String priceId,
       @Validated @RequestBody StringerPrice price) {
     return ResponseEntity
-        .ok(ApiResponse.success(stringerService.updatePrice(UUID.fromString(id), UUID.fromString(priceId), price)));
+        .ok(ApiResponse.success(
+            stringerService.updatePrice(UUID.fromString(id), UUID.fromString(priceId), price)));
   }
 
   @PostMapping("/upvote-price/{priceId}")
   public ResponseEntity<ApiResponse<StringerPrice>> upvotePrice(
       @PathVariable String priceId) {
-    return ResponseEntity.ok(ApiResponse.success(stringerService.upvotePrice(UUID.fromString(priceId))));
+    return ResponseEntity.ok(
+        ApiResponse.success(stringerService.upvotePrice(UUID.fromString(priceId))));
   }
 }
