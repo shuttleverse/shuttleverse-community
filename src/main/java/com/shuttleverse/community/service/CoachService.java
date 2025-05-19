@@ -1,8 +1,10 @@
 package com.shuttleverse.community.service;
 
 import com.shuttleverse.community.model.Coach;
+import com.shuttleverse.community.model.CoachPrice;
 import com.shuttleverse.community.model.CoachSchedule;
 import com.shuttleverse.community.model.User;
+import com.shuttleverse.community.repository.CoachPriceRepository;
 import com.shuttleverse.community.repository.CoachRepository;
 import com.shuttleverse.community.repository.CoachScheduleRepository;
 import com.shuttleverse.community.util.SpecificationBuilder;
@@ -24,6 +26,8 @@ public class CoachService {
 
   private final CoachRepository coachRepository;
   private final CoachScheduleRepository scheduleRepository;
+  private final CoachPriceRepository priceRepository;
+  private final CoachPriceRepository coachPriceRepository;
 
   @Transactional
   public Coach createCoach(Coach coach, User creator) {
@@ -60,9 +64,11 @@ public class CoachService {
   }
 
   @Transactional
-  public List<CoachSchedule> addSchedule(UUID coachId, List<CoachSchedule> schedules) {
+  public List<CoachSchedule> addSchedule(User creator, UUID coachId,
+      List<CoachSchedule> schedules) {
     Coach coach = getCoach(coachId);
     for (CoachSchedule schedule : schedules) {
+      schedule.setSubmittedBy(creator);
       schedule.setCoach(coach);
     }
     return scheduleRepository.saveAll(schedules);
@@ -85,6 +91,25 @@ public class CoachService {
         .orElseThrow(() -> new EntityNotFoundException("Schedule not found"));
     schedule.setUpvotes(schedule.getUpvotes() + 1);
     return scheduleRepository.save(schedule);
+  }
+
+  @Transactional
+  public CoachPrice updatePrice(UUID coachId, UUID priceId, CoachPrice price) {
+    Coach coach = getCoach(coachId);
+    if (!isOwner(coachId, coach.getOwner().getId())) {
+      throw new AccessDeniedException("Only the owner can update price");
+    }
+    price.setId(priceId);
+    price.setCoach(coach);
+    return priceRepository.save(price);
+  }
+
+  @Transactional
+  public CoachPrice upvotePrice(UUID priceId) {
+    CoachPrice coachPrice = coachPriceRepository.findById(priceId)
+        .orElseThrow(() -> new EntityNotFoundException("Price not found"));
+    coachPrice.setUpvotes(coachPrice.getUpvotes() + 1);
+    return coachPriceRepository.save(coachPrice);
   }
 
   public boolean isOwner(UUID coachId, UUID userId) {

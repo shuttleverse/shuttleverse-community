@@ -55,6 +55,10 @@ public class Coach {
   @JsonManagedReference("coach-schedule")
   private List<CoachSchedule> scheduleList;
 
+  @OneToMany(mappedBy = "coach", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  @JsonManagedReference("coach-price")
+  private List<CoachPrice> priceList;
+
   @Column(name = "created_at", nullable = false)
   private ZonedDateTime createdAt;
 

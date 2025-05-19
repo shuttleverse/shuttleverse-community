@@ -4,9 +4,10 @@ import com.shuttleverse.community.api.ApiResponse;
 import com.shuttleverse.community.model.Court;
 import com.shuttleverse.community.model.CourtPrice;
 import com.shuttleverse.community.model.CourtSchedule;
+import com.shuttleverse.community.model.User;
 import com.shuttleverse.community.service.CourtService;
 import com.shuttleverse.community.service.UserService;
-import com.shuttleverse.community.model.User;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,9 +31,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
-import jakarta.persistence.EntityNotFoundException;
 
 @RestController
 @RequestMapping("/court")
@@ -102,8 +102,13 @@ public class CourtController {
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<List<CourtSchedule>>> addSchedule(
       @PathVariable String id,
-      @Validated @RequestBody List<CourtSchedule> schedule) {
-    List<CourtSchedule> newSchedule = courtService.addSchedule(UUID.fromString(id), schedule);
+      @Validated @RequestBody List<CourtSchedule> schedule,
+      @AuthenticationPrincipal Jwt jwt) {
+    String sub = jwt.getSubject();
+    User creator = userService.findBySub(sub)
+        .orElseThrow(() -> new EntityNotFoundException("User not found"));
+    List<CourtSchedule> newSchedule = courtService.addSchedule(creator, UUID.fromString(id),
+        schedule);
     return ResponseEntity.ok(ApiResponse.success(newSchedule));
   }
 
@@ -111,8 +116,13 @@ public class CourtController {
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<List<CourtPrice>>> addPrice(
       @PathVariable String id,
-      @Validated @RequestBody List<CourtPrice> prices) {
-    List<CourtPrice> newPrices = courtService.addPrice(UUID.fromString(id), prices);
+      @Validated @RequestBody List<CourtPrice> prices,
+      @AuthenticationPrincipal Jwt jwt) {
+    String sub = jwt.getSubject();
+    User creator = userService.findBySub(sub)
+        .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+    List<CourtPrice> newPrices = courtService.addPrice(creator, UUID.fromString(id), prices);
     return ResponseEntity.ok(ApiResponse.success(newPrices));
   }
 

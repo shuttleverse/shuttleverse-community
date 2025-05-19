@@ -27,6 +27,7 @@ public class CourtService {
   private final CourtRepository courtRepository;
   private final CourtScheduleRepository scheduleRepository;
   private final CourtPriceRepository priceRepository;
+  private final CourtPriceRepository courtPriceRepository;
 
   @Transactional
   public Court createCourt(User creator, Court court) {
@@ -63,9 +64,10 @@ public class CourtService {
   }
 
   @Transactional
-  public List<CourtSchedule> addSchedule(UUID courtId, List<CourtSchedule> schedule) {
+  public List<CourtSchedule> addSchedule(User creator, UUID courtId, List<CourtSchedule> schedule) {
     Court court = getCourt(courtId);
     for (CourtSchedule courtSchedule : schedule) {
+      courtSchedule.setSubmittedBy(creator);
       courtSchedule.setCourt(court);
     }
 
@@ -92,12 +94,32 @@ public class CourtService {
   }
 
   @Transactional
-  public List<CourtPrice> addPrice(UUID courtId, List<CourtPrice> prices) {
+  public List<CourtPrice> addPrice(User creator, UUID courtId, List<CourtPrice> prices) {
     Court court = getCourt(courtId);
     for (CourtPrice price : prices) {
+      price.setSubmittedBy(creator);
       price.setCourt(court);
     }
     return priceRepository.saveAll(prices);
+  }
+
+  @Transactional
+  public CourtPrice updatePrice(UUID courtId, UUID priceId, CourtPrice price) {
+    Court court = getCourt(courtId);
+    if (!isOwner(courtId, court.getOwner().getId())) {
+      throw new AccessDeniedException("Only the owner can update price");
+    }
+    price.setId(priceId);
+    price.setCourt(court);
+    return priceRepository.save(price);
+  }
+
+  @Transactional
+  public CourtPrice upvotePrice(UUID priceId) {
+    CourtPrice courtPrice = courtPriceRepository.findById(priceId)
+        .orElseThrow(() -> new EntityNotFoundException("Price not found"));
+    courtPrice.setUpvotes(courtPrice.getUpvotes() + 1);
+    return courtPriceRepository.save(courtPrice);
   }
 
   public boolean isOwner(UUID courtId, UUID userId) {

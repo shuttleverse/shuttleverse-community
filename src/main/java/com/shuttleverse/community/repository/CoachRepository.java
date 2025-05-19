@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface CoachRepository extends JpaRepository<Coach, UUID>, JpaSpecificationExecutor<Coach> {
+public interface CoachRepository extends JpaRepository<Coach, UUID>,
+    JpaSpecificationExecutor<Coach> {
 
 }

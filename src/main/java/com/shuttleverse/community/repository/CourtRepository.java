@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface CourtRepository extends JpaRepository<Court, UUID>, JpaSpecificationExecutor<Court> {
+public interface CourtRepository extends JpaRepository<Court, UUID>,
+    JpaSpecificationExecutor<Court> {
 
 }

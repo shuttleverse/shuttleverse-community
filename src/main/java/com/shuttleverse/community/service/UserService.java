@@ -27,24 +27,8 @@ public class UserService {
   }
 
   @Transactional
-  public User createOrUpdateUserByEmail(String email, String username) {
-    User existingUser = userRepository.findByEmail(email);
-    User user = existingUser != null ? existingUser : new User();
-    if (existingUser == null) {
-      user.setId(UUID.randomUUID());
-    }
-    user.setEmail(email);
-    user.setUsername(username);
-    return userRepository.save(user);
-  }
-
-  @Transactional
   public User save(User user) {
     return userRepository.save(user);
-  }
-
-  public Optional<User> findById(UUID id) {
-    return userRepository.findById(id);
   }
 
   public Optional<User> findByEmail(String email) {
