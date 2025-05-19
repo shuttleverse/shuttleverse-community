@@ -127,7 +127,7 @@ class CourtServiceTest {
     when(scheduleRepository.saveAll(anyList())).thenReturn(List.of(schedule));
 
     List<CourtSchedule> schedules = List.of(schedule);
-    List<CourtSchedule> results = courtService.addSchedule(courtId, schedules);
+    List<CourtSchedule> results = courtService.addSchedule(user, courtId, schedules);
 
     assertNotNull(results);
     assertEquals(1, results.size());
@@ -145,7 +145,7 @@ class CourtServiceTest {
     when(priceRepository.saveAll(anyList())).thenReturn(List.of(price));
 
     List<CourtPrice> prices = List.of(price);
-    List<CourtPrice> results = courtService.addPrice(courtId, prices);
+    List<CourtPrice> results = courtService.addPrice(user, courtId, prices);
 
     assertNotNull(results);
     assertEquals(1, results.size());

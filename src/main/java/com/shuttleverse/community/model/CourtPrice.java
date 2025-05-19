@@ -49,6 +49,10 @@ public class CourtPrice {
   @Column(name = "is_verified", nullable = false)
   private Boolean isVerified = false;
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "submitted_by")
+  private User submittedBy;
+
   @PrePersist
   protected void onCreate() {
     createdAt = ZonedDateTime.now();

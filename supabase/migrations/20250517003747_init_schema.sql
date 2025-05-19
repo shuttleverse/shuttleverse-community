@@ -31,7 +31,6 @@ create table "public"."coach"
     "creator_id"       uuid                        not null
 );
 
-
 create table "public"."coach_schedule"
 (
     "schedule_id"  uuid                        not null default gen_random_uuid(),
@@ -43,7 +42,19 @@ create table "public"."coach_schedule"
     "updated_at"   timestamp without time zone not null,
     "upvotes"      integer                     not null,
     "is_verified"  boolean                     not null,
-    "submitted_by" uuid
+    "submitted_by" uuid                        not null
+);
+
+create table "public"."coach_price"
+(
+    "price_id"    uuid                        not null default gen_random_uuid(),
+    "coach_id"    uuid                        not null,
+    "price"       double precision            not null,
+    "duration"    integer                     not null,
+    "created_at"  timestamp without time zone not null,
+    "updated_at"  timestamp without time zone not null,
+    "upvotes"     integer                     not null,
+    "is_verified" boolean                     not null
 );
 
 
@@ -65,7 +76,7 @@ create table "public"."court"
 create table "public"."court_price"
 (
     "price_id"    uuid                        not null default gen_random_uuid(),
-    "court_id"    uuid,
+    "court_id"    uuid                        not null,
     "price"       double precision            not null,
     "duration"    integer                     not null,
     "created_at"  timestamp without time zone not null,
@@ -78,13 +89,13 @@ create table "public"."court_price"
 create table "public"."court_schedule"
 (
     "schedule_id"  uuid                        not null default gen_random_uuid(),
-    "court_id"     uuid,
+    "court_id"     uuid                        not null,
     "day_of_week"  integer                     not null,
     "open_time"    character varying(255)      not null,
     "close_time"   character varying(255)      not null,
     "is_verified"  boolean                     not null,
     "upvotes"      integer                     not null,
-    "submitted_by" uuid,
+    "submitted_by" uuid                        not null,
     "created_at"   timestamp without time zone not null,
     "updated_at"   timestamp without time zone not null
 );
@@ -129,7 +140,7 @@ create table "public"."stringer_price"
     "updated_at"   timestamp without time zone not null,
     "upvotes"      integer                     not null,
     "is_verified"  boolean                     not null,
-    "submitted_by" uuid
+    "submitted_by" uuid                        not null
 );
 
 

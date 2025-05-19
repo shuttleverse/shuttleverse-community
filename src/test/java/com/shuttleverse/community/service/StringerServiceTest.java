@@ -103,7 +103,7 @@ class StringerServiceTest {
         when(stringerRepository.findById(any(UUID.class))).thenReturn(Optional.of(stringer));
         when(priceRepository.saveAll(anyList())).thenReturn(prices);
 
-        List<StringerPrice> results = stringerService.addPrice(stringerId, prices);
+        List<StringerPrice> results = stringerService.addPrice(user, stringerId, prices);
 
         assertNotNull(results);
         assertEquals(1, results.size());

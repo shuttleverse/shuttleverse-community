@@ -105,7 +105,7 @@ class CoachServiceTest {
         when(coachRepository.findById(any(UUID.class))).thenReturn(Optional.of(coach));
         when(scheduleRepository.saveAll(anyList())).thenReturn(schedules);
 
-        List<CoachSchedule> results = coachService.addSchedule(coachId, schedules);
+        List<CoachSchedule> results = coachService.addSchedule(user, coachId, schedules);
 
         assertNotNull(results);
         assertEquals(1, results.size());

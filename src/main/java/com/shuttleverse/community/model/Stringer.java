@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -47,7 +48,7 @@ public class Stringer {
   @Column(name = "additional_details")
   private String additionalDetails;
 
-  @OneToMany(mappedBy = "stringer", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "stringer", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
   @JsonManagedReference("stringer-price")
   private List<StringerPrice> priceList;
 

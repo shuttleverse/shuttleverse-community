@@ -1,7 +1,6 @@
 package com.shuttleverse.community.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.CascadeType;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -10,39 +9,33 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.ZonedDateTime;
-import java.util.List;
 import java.util.UUID;
 import lombok.Data;
 
 @Entity
-@Table(name = "court")
+@Table(name = "coach_price")
 @Data
-public class Court {
+public class CoachPrice {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "court_id")
+  @Column(name = "price_id")
   private UUID id;
 
-  @Column(name = "name")
-  private String name;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "coach_id")
+  @JsonBackReference("coach-price")
+  private Coach coach;
 
-  @Column(name = "location")
-  private String location;
+  @Column(name = "price", nullable = false)
+  private Double price;
 
-  @Column(name = "description")
-  private String description;
-
-  @Column(name = "website")
-  private String website;
-
-  @Column(name = "phone_number")
-  private String phoneNumber;
+  @Column(name = "duration", nullable = false)
+  private Integer duration;
 
   @Column(name = "created_at", nullable = false)
   private ZonedDateTime createdAt;
@@ -50,21 +43,15 @@ public class Court {
   @Column(name = "updated_at", nullable = false)
   private ZonedDateTime updatedAt;
 
-  @OneToMany(mappedBy = "court", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-  @JsonManagedReference("court-schedule")
-  private List<CourtSchedule> scheduleList;
+  @Column(name = "upvotes", nullable = false)
+  private Integer upvotes = 0;
 
-  @OneToMany(mappedBy = "court", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-  @JsonManagedReference("court-price")
-  private List<CourtPrice> priceList;
+  @Column(name = "is_verified", nullable = false)
+  private Boolean isVerified = false;
 
-  @ManyToOne
-  @JoinColumn(name = "creator_id")
-  private User creator;
-
-  @ManyToOne
-  @JoinColumn(name = "owner_id")
-  private User owner;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "submitted_by")
+  private User submittedBy;
 
   @PrePersist
   protected void onCreate() {
