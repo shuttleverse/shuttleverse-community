@@ -3,6 +3,7 @@ package com.shuttleverse.community.controller;
 import com.shuttleverse.community.api.ApiResponse;
 import com.shuttleverse.community.model.Coach;
 import com.shuttleverse.community.model.CoachSchedule;
+import com.shuttleverse.community.model.CoachPrice;
 import com.shuttleverse.community.model.User;
 import com.shuttleverse.community.service.CoachService;
 import com.shuttleverse.community.service.UserService;
@@ -129,5 +130,36 @@ public class CoachController {
       @PathVariable String scheduleId) {
     return ResponseEntity.ok(
         ApiResponse.success(coachService.upvoteSchedule(UUID.fromString(scheduleId))));
+  }
+
+  @PostMapping("/{id}/price")
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<ApiResponse<List<CoachPrice>>> addPrice(
+      @PathVariable String id,
+      @Validated @RequestBody List<CoachPrice> prices,
+      @AuthenticationPrincipal Jwt jwt) {
+    String sub = jwt.getSubject();
+    User creator = userService.findBySub(sub)
+        .orElseThrow(() -> new EntityNotFoundException("User not found"));
+    return ResponseEntity.ok(
+        ApiResponse.success(coachService.addPrice(creator, UUID.fromString(id), prices)));
+  }
+
+  @PutMapping("/{id}/price/{priceId}")
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<ApiResponse<CoachPrice>> updatePrice(
+      @PathVariable String id,
+      @PathVariable String priceId,
+      @Validated @RequestBody CoachPrice price) {
+    return ResponseEntity.ok(
+        ApiResponse.success(
+            coachService.updatePrice(UUID.fromString(id), UUID.fromString(priceId), price)));
+  }
+
+  @PostMapping("/upvote-price/{priceId}")
+  public ResponseEntity<ApiResponse<CoachPrice>> upvotePrice(
+      @PathVariable String priceId) {
+    return ResponseEntity.ok(
+        ApiResponse.success(coachService.upvotePrice(UUID.fromString(priceId))));
   }
 }
