@@ -36,6 +36,9 @@ public class Stringer {
   @Column(name = "name")
   private String name;
 
+  @Column(name = "location")
+  private String location;
+
   @Column(name = "description")
   private String description;
 

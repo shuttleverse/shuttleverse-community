@@ -30,7 +30,7 @@ public class Coach {
   private UUID id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "club_id", nullable = false)
+  @JoinColumn(name = "club_id")
   private Club club;
 
   @Column(nullable = false, length = 100)

@@ -27,7 +27,7 @@ public class StringerService {
 
   @Transactional
   public Stringer createStringer(Stringer stringer, User creator) {
-    stringer.setOwner(creator);
+    stringer.setCreator(creator);
     return stringerRepository.save(stringer);
   }
 
