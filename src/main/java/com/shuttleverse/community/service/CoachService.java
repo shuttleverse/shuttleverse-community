@@ -31,7 +31,7 @@ public class CoachService {
 
   @Transactional
   public Coach createCoach(Coach coach, User creator) {
-    coach.setOwner(creator);
+    coach.setCreator(creator);
     return coachRepository.save(coach);
   }
 
@@ -110,6 +110,16 @@ public class CoachService {
         .orElseThrow(() -> new EntityNotFoundException("Price not found"));
     coachPrice.setUpvotes(coachPrice.getUpvotes() + 1);
     return coachPriceRepository.save(coachPrice);
+  }
+
+  @Transactional
+  public List<CoachPrice> addPrice(User creator, UUID coachId, List<CoachPrice> prices) {
+    Coach coach = getCoach(coachId);
+    for (CoachPrice price : prices) {
+      price.setSubmittedBy(creator);
+      price.setCoach(coach);
+    }
+    return priceRepository.saveAll(prices);
   }
 
   public boolean isOwner(UUID coachId, UUID userId) {
