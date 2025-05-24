@@ -121,7 +121,7 @@ public class StringerController {
             stringerService.updatePrice(UUID.fromString(id), UUID.fromString(priceId), price)));
   }
 
-  @PostMapping("/upvote-price/{priceId}")
+  @PostMapping("/price/{priceId}/upvote")
   public ResponseEntity<ApiResponse<StringerPrice>> upvotePrice(
       @PathVariable String priceId) {
     return ResponseEntity.ok(

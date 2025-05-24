@@ -1,7 +1,11 @@
 package com.shuttleverse.community.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -13,19 +17,22 @@ import lombok.Data;
 @Entity
 @Table(name = "users")
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class User {
 
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "user_id")
   private UUID id;
 
-  @Column(nullable = false, unique = true, length = 50)
+  @Column(nullable = false, length = 50)
   private String username;
 
-  @Column(nullable = false, unique = true, length = 100)
+  @Column(nullable = false, length = 100)
   private String email;
 
-  @Column(name = "bio")
+  @Column(length = 255)
   private String bio;
 
   @Column(name = "created_at", nullable = false)

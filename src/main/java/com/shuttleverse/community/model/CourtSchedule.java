@@ -1,8 +1,11 @@
 package com.shuttleverse.community.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -18,6 +21,8 @@ import lombok.Data;
 @Entity
 @Table(name = "court_schedule")
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class CourtSchedule {
 
   @Id
@@ -25,8 +30,8 @@ public class CourtSchedule {
   @Column(name = "schedule_id")
   private UUID id;
 
-  @ManyToOne
-  @JoinColumn(name = "court_id")
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "court_id", nullable = false)
   @JsonBackReference("court-schedule")
   private Court court;
 
@@ -45,8 +50,9 @@ public class CourtSchedule {
   @Column(name = "upvotes", nullable = false)
   private Integer upvotes = 0;
 
-  @ManyToOne
-  @JoinColumn(name = "submitted_by")
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "submitted_by", nullable = false)
+  @JsonBackReference("user-schedule")
   private User submittedBy;
 
   @Column(name = "created_at", nullable = false)

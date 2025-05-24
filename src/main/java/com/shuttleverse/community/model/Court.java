@@ -1,5 +1,7 @@
 package com.shuttleverse.community.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -22,6 +24,8 @@ import lombok.Data;
 @Entity
 @Table(name = "court")
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Court {
 
   @Id
@@ -29,10 +33,10 @@ public class Court {
   @Column(name = "court_id")
   private UUID id;
 
-  @Column(name = "name")
+  @Column(name = "name", length = 100, nullable = false)
   private String name;
 
-  @Column(name = "location")
+  @Column(name = "location", nullable = false)
   private String location;
 
   @Column(name = "description")
@@ -43,6 +47,9 @@ public class Court {
 
   @Column(name = "phone_number")
   private String phoneNumber;
+
+  @Column(name = "other_contacts")
+  private String otherContacts;
 
   @Column(name = "created_at", nullable = false)
   private ZonedDateTime createdAt;
@@ -58,11 +65,11 @@ public class Court {
   @JsonManagedReference("court-price")
   private List<CourtPrice> priceList;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "creator_id")
   private User creator;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "owner_id")
   private User owner;
 
