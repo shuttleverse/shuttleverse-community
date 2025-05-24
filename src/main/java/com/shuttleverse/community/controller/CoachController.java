@@ -2,8 +2,8 @@ package com.shuttleverse.community.controller;
 
 import com.shuttleverse.community.api.ApiResponse;
 import com.shuttleverse.community.model.Coach;
-import com.shuttleverse.community.model.CoachSchedule;
 import com.shuttleverse.community.model.CoachPrice;
+import com.shuttleverse.community.model.CoachSchedule;
 import com.shuttleverse.community.model.User;
 import com.shuttleverse.community.service.CoachService;
 import com.shuttleverse.community.service.UserService;
@@ -124,14 +124,6 @@ public class CoachController {
     return ResponseEntity.ok(ApiResponse.success(updatedSchedule));
   }
 
-  @PostMapping("/{id}/upvote-schedule/{scheduleId}")
-  public ResponseEntity<ApiResponse<CoachSchedule>> upvoteSchedule(
-      @PathVariable String id,
-      @PathVariable String scheduleId) {
-    return ResponseEntity.ok(
-        ApiResponse.success(coachService.upvoteSchedule(UUID.fromString(scheduleId))));
-  }
-
   @PostMapping("/{id}/price")
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<List<CoachPrice>>> addPrice(
@@ -156,10 +148,17 @@ public class CoachController {
             coachService.updatePrice(UUID.fromString(id), UUID.fromString(priceId), price)));
   }
 
-  @PostMapping("/upvote-price/{priceId}")
+  @PostMapping("/price/{priceId}/upvote")
   public ResponseEntity<ApiResponse<CoachPrice>> upvotePrice(
       @PathVariable String priceId) {
     return ResponseEntity.ok(
         ApiResponse.success(coachService.upvotePrice(UUID.fromString(priceId))));
+  }
+
+  @PostMapping("/schedule/{scheduleId}/upvote")
+  public ResponseEntity<ApiResponse<CoachSchedule>> upvoteSchedule(
+      @PathVariable String scheduleId) {
+    return ResponseEntity.ok(
+        ApiResponse.success(coachService.upvoteSchedule(UUID.fromString(scheduleId))));
   }
 }

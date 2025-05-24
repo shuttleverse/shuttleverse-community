@@ -138,11 +138,19 @@ public class CourtController {
                 schedule)));
   }
 
-  @PostMapping("/{id}/upvote-schedule/{scheduleId}")
+  @PostMapping("/schedule/{scheduleId}/upvote")
   public ResponseEntity<ApiResponse<CourtSchedule>> upvoteSchedule(
-      @PathVariable String id,
       @PathVariable String scheduleId) {
     return ResponseEntity.ok(
         ApiResponse.success(courtService.upvoteSchedule(UUID.fromString(scheduleId))));
+  }
+
+  @PostMapping("/price/{scheduleId}/upvote")
+  public ResponseEntity<ApiResponse<CourtPrice>> upvotePrice(
+      @PathVariable String scheduleId
+  ) {
+    return ResponseEntity.ok(
+        ApiResponse.success(courtService.upvotePrice(UUID.fromString(scheduleId)))
+    );
   }
 }

@@ -53,7 +53,7 @@ public class StringerPrice {
   private Boolean isVerified = false;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "submitted_by")
+  @JoinColumn(name = "submitted_by", nullable = false)
   private User submittedBy;
 
   @PrePersist
