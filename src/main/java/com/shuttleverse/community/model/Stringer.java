@@ -33,7 +33,7 @@ public class Stringer {
   @JoinColumn(name = "club_id")
   private Club club;
 
-  @Column(name = "name")
+  @Column(name = "name", nullable = false)
   private String name;
 
   @Column(name = "location")
@@ -42,7 +42,7 @@ public class Stringer {
   @Column(name = "description")
   private String description;
 
-  @Column(name = "other_contacts")
+  @Column(name = "other_contacts", nullable = false)
   private String otherContacts;
 
   @Column(name = "phone_number")

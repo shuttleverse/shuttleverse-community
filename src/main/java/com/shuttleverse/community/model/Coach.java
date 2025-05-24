@@ -1,5 +1,7 @@
 package com.shuttleverse.community.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -22,6 +24,8 @@ import lombok.Data;
 @Entity
 @Table(name = "coach")
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Coach {
 
   @Id
@@ -45,7 +49,7 @@ public class Coach {
   @Column(name = "experience_years")
   private Integer experienceYears;
 
-  @Column(name = "other_contacts", length = 100)
+  @Column(name = "other_contacts", nullable = false)
   private String otherContacts;
 
   @Column(name = "phone_number", length = 20)
@@ -72,7 +76,7 @@ public class Coach {
   @Column(name = "is_verified", nullable = false)
   private boolean isVerified;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "creator_id")
   private User creator;
 

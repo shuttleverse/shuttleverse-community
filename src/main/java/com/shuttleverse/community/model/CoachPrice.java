@@ -1,6 +1,8 @@
 package com.shuttleverse.community.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -19,6 +21,8 @@ import lombok.Data;
 @Entity
 @Table(name = "coach_price")
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class CoachPrice {
 
   @Id
@@ -27,7 +31,7 @@ public class CoachPrice {
   private UUID id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "coach_id")
+  @JoinColumn(name = "coach_id", nullable = false)
   @JsonBackReference("coach-price")
   private Coach coach;
 
@@ -50,7 +54,8 @@ public class CoachPrice {
   private Boolean isVerified = false;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "submitted_by")
+  @JoinColumn(name = "submitted_by", nullable = false)
+  @JsonBackReference("user-price")
   private User submittedBy;
 
   @PrePersist
