@@ -30,10 +30,8 @@ public class CourtSchedule {
   @Column(name = "schedule_id")
   private UUID id;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "court_id", nullable = false)
-  @JsonBackReference("court-schedule")
-  private Court court;
+  @Column(name = "court_id", nullable = false)
+  private UUID courtId;
 
   @Column(name = "day_of_week", nullable = false)
   private Integer dayOfWeek;

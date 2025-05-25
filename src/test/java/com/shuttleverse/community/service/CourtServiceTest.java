@@ -77,7 +77,7 @@ class CourtServiceTest {
     schedule.setUpvotes(0);
     schedule.setVerified(false);
     schedule.setSubmittedBy(user);
-    schedule.setCourt(court);
+    schedule.setCourtId(courtId);
 
     price = new CourtPrice();
     price.setId(priceId);
@@ -85,7 +85,7 @@ class CourtServiceTest {
     price.setDuration(60);
     price.setUpvotes(0);
     price.setIsVerified(false);
-    price.setCourt(court);
+    price.setCourtId(courtId);
   }
 
   @Test

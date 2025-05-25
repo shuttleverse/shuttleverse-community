@@ -192,7 +192,7 @@ class CourtControllerTest {
     schedule.setUpvotes(0);
     schedule.setVerified(false);
     schedule.setSubmittedBy(user);
-    schedule.setCourt(court);
+    schedule.setCourtId(courtId);
 
     when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
     when(courtService.createCourt(any(User.class), any(Court.class))).thenReturn(court);
@@ -225,7 +225,7 @@ class CourtControllerTest {
     schedule.setUpvotes(1);
     schedule.setVerified(false);
     schedule.setSubmittedBy(user);
-    schedule.setCourt(court);
+    schedule.setCourtId(courtId);
 
     when(courtService.upvoteSchedule(any(UUID.class))).thenReturn(schedule);
 
@@ -247,7 +247,7 @@ class CourtControllerTest {
     newSchedule.setUpvotes(0);
     newSchedule.setVerified(false);
     newSchedule.setSubmittedBy(user);
-    newSchedule.setCourt(court);
+    newSchedule.setCourtId(courtId);
 
     when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
     doReturn(List.of(newSchedule)).when(courtService).addSchedule(any(User.class), any(UUID.class),

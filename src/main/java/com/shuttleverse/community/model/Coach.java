@@ -25,7 +25,7 @@ import lombok.Data;
 @Table(name = "coach")
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Coach {
 
   @Id
@@ -53,7 +53,7 @@ public class Coach {
   private String otherContacts;
 
   @Column(name = "phone_number", length = 20)
-  private String contactPhone;
+  private String phoneNumber;
 
   @OneToMany(mappedBy = "coach", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
   @JsonManagedReference("coach-schedule")

@@ -1,6 +1,5 @@
 package com.shuttleverse.community.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -26,7 +25,7 @@ public class StringerPrice {
   @Column(name = "price_id")
   private UUID id;
 
-  @Column(name = "stringer_id", nullable = false, insertable = false, updatable = false)
+  @Column(name = "stringer_id", nullable = false)
   private UUID stringerId;
 
   @Column(name = "string_name", nullable = false, length = 100)
@@ -40,11 +39,6 @@ public class StringerPrice {
 
   @Column(name = "updated_at", nullable = false)
   private ZonedDateTime updatedAt;
-
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "stringer_id")
-  @JsonBackReference("stringer-price")
-  private Stringer stringer;
 
   @Column(name = "upvotes", nullable = false)
   private Integer upvotes = 0;
