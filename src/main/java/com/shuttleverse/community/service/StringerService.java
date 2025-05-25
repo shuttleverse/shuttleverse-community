@@ -61,22 +61,20 @@ public class StringerService {
 
   @Transactional
   public List<StringerPrice> addPrice(User creator, UUID stringerId, List<StringerPrice> prices) {
-    Stringer stringer = getStringer(stringerId);
     for (StringerPrice price : prices) {
       price.setSubmittedBy(creator);
-      price.setStringer(stringer);
+      price.setStringerId(stringerId);
     }
     return priceRepository.saveAll(prices);
   }
 
   @Transactional
   public StringerPrice updatePrice(UUID stringerId, UUID priceId, StringerPrice price) {
-    Stringer stringer = getStringer(stringerId);
-    if (!isOwner(stringerId, stringer.getOwner().getId())) {
+    if (!isOwner(stringerId, price.getSubmittedBy().getId())) {
       throw new AccessDeniedException("Only the owner can update price");
     }
     price.setId(priceId);
-    price.setStringer(stringer);
+    price.setStringerId(stringerId);
     return priceRepository.save(price);
   }
 

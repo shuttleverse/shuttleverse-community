@@ -25,7 +25,7 @@ import lombok.Data;
 @Table(name = "court")
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Court {
 
   @Id

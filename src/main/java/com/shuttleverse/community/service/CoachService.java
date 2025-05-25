@@ -66,10 +66,9 @@ public class CoachService {
   @Transactional
   public List<CoachSchedule> addSchedule(User creator, UUID coachId,
       List<CoachSchedule> schedules) {
-    Coach coach = getCoach(coachId);
     for (CoachSchedule schedule : schedules) {
       schedule.setSubmittedBy(creator);
-      schedule.setCoach(coach);
+      schedule.setCoachId(coachId);
     }
     return scheduleRepository.saveAll(schedules);
   }
@@ -81,7 +80,7 @@ public class CoachService {
       throw new AccessDeniedException("Only the owner can update schedule");
     }
     schedule.setId(scheduleId);
-    schedule.setCoach(coach);
+    schedule.setCoachId(coachId);
     return scheduleRepository.save(schedule);
   }
 
@@ -100,7 +99,7 @@ public class CoachService {
       throw new AccessDeniedException("Only the owner can update price");
     }
     price.setId(priceId);
-    price.setCoach(coach);
+    price.setCoachId(coachId);
     return priceRepository.save(price);
   }
 
@@ -114,10 +113,9 @@ public class CoachService {
 
   @Transactional
   public List<CoachPrice> addPrice(User creator, UUID coachId, List<CoachPrice> prices) {
-    Coach coach = getCoach(coachId);
     for (CoachPrice price : prices) {
       price.setSubmittedBy(creator);
-      price.setCoach(coach);
+      price.setCoachId(coachId);
     }
     return priceRepository.saveAll(prices);
   }

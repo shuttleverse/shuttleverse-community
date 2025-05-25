@@ -63,7 +63,7 @@ class CoachServiceTest {
         schedule.setUpvotes(0);
         schedule.setVerified(false);
         schedule.setSubmittedBy(user);
-        schedule.setCoach(coach);
+        schedule.setCoachId(coachId);
     }
 
     @Test

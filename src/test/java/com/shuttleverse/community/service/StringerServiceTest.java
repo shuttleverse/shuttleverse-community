@@ -61,7 +61,7 @@ class StringerServiceTest {
         price.setPrice(30.0);
         price.setUpvotes(0);
         price.setIsVerified(false);
-        price.setStringer(stringer);
+        price.setStringerId(stringerId);
     }
 
     @Test
