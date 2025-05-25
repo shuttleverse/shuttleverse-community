@@ -30,10 +30,8 @@ public class CourtPrice {
   @Column(name = "price_id")
   private UUID id;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "court_id", nullable = false)
-  @JsonBackReference("court-price")
-  private Court court;
+  @Column(name = "court_id", nullable = false)
+  private UUID courtId;
 
   @Column(name = "price", nullable = false)
   private Double price;

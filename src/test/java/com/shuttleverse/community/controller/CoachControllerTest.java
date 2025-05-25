@@ -180,7 +180,7 @@ class CoachControllerTest {
     schedule.setUpvotes(0);
     schedule.setVerified(false);
     schedule.setSubmittedBy(user);
-    schedule.setCoach(coach);
+    schedule.setCoachId(coachId);
 
     when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
     when(coachService.createCoach(any(Coach.class), any(User.class))).thenReturn(coach);
@@ -213,7 +213,7 @@ class CoachControllerTest {
     schedule.setUpvotes(1);
     schedule.setVerified(false);
     schedule.setSubmittedBy(user);
-    schedule.setCoach(coach);
+    schedule.setCoachId(coachId);
 
     when(coachService.upvoteSchedule(any(UUID.class))).thenReturn(schedule);
 
@@ -235,7 +235,7 @@ class CoachControllerTest {
     newSchedule.setUpvotes(0);
     newSchedule.setVerified(false);
     newSchedule.setSubmittedBy(user);
-    newSchedule.setCoach(coach);
+    newSchedule.setCoachId(coachId);
 
     List<CoachSchedule> schedules = List.of(newSchedule);
     when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));

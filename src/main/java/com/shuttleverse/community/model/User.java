@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -18,11 +16,13 @@ import lombok.Data;
 @Table(name = "users")
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
 
+  /**
+   * ID should be created from Google sub. No generation method needed.
+   */
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "user_id")
   private UUID id;
 
@@ -32,7 +32,6 @@ public class User {
   @Column(nullable = false, length = 100)
   private String email;
 
-  @Column(length = 255)
   private String bio;
 
   @Column(name = "created_at", nullable = false)

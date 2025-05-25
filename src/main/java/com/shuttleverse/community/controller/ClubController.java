@@ -70,7 +70,8 @@ public class ClubController {
   public ResponseEntity<ApiResponse<Club>> updateClub(
       @PathVariable String id,
       @Validated @RequestBody Club club) {
-    return ResponseEntity.ok(ApiResponse.success(clubService.updateClub(UUID.fromString(id), club)));
+    return ResponseEntity.ok(
+        ApiResponse.success(clubService.updateClub(UUID.fromString(id), club)));
   }
 
   @DeleteMapping("/{id}")

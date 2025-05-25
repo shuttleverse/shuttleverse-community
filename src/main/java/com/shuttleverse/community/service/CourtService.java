@@ -65,10 +65,9 @@ public class CourtService {
 
   @Transactional
   public List<CourtSchedule> addSchedule(User creator, UUID courtId, List<CourtSchedule> schedule) {
-    Court court = getCourt(courtId);
     for (CourtSchedule courtSchedule : schedule) {
       courtSchedule.setSubmittedBy(creator);
-      courtSchedule.setCourt(court);
+      courtSchedule.setCourtId(courtId);
     }
 
     return scheduleRepository.saveAll(schedule);
@@ -81,7 +80,7 @@ public class CourtService {
       throw new AccessDeniedException("Only the owner can update schedule");
     }
     schedule.setId(scheduleId);
-    schedule.setCourt(court);
+    schedule.setCourtId(courtId);
     return scheduleRepository.save(schedule);
   }
 
@@ -95,22 +94,20 @@ public class CourtService {
 
   @Transactional
   public List<CourtPrice> addPrice(User creator, UUID courtId, List<CourtPrice> prices) {
-    Court court = getCourt(courtId);
     for (CourtPrice price : prices) {
       price.setSubmittedBy(creator);
-      price.setCourt(court);
+      price.setCourtId(courtId);
     }
     return priceRepository.saveAll(prices);
   }
 
   @Transactional
   public CourtPrice updatePrice(UUID courtId, UUID priceId, CourtPrice price) {
-    Court court = getCourt(courtId);
-    if (!isOwner(courtId, court.getOwner().getId())) {
+    if (!isOwner(courtId, price.getSubmittedBy().getId())) {
       throw new AccessDeniedException("Only the owner can update price");
     }
     price.setId(priceId);
-    price.setCourt(court);
+    price.setCourtId(courtId);
     return priceRepository.save(price);
   }
 

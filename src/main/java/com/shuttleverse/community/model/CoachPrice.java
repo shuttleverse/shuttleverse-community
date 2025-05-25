@@ -30,10 +30,8 @@ public class CoachPrice {
   @Column(name = "price_id")
   private UUID id;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "coach_id", nullable = false)
-  @JsonBackReference("coach-price")
-  private Coach coach;
+  @Column(name = "coach_id", nullable = false)
+  private UUID coachId;
 
   @Column(name = "price", nullable = false)
   private Double price;
