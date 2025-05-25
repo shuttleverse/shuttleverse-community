@@ -88,7 +88,7 @@ class ClubControllerTest {
     doNothing().when(clubService).deleteClub(any(UUID.class));
 
     ResponseEntity<ApiResponse<Void>> response = clubController.deleteClub(clubId.toString());
- 
+
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
     verify(clubService).deleteClub(clubId);
   }

@@ -1,6 +1,10 @@
 package com.shuttleverse.community.controller;
 
 import com.shuttleverse.community.api.ApiResponse;
+import com.shuttleverse.community.dto.CourtPriceResponse;
+import com.shuttleverse.community.dto.CourtResponse;
+import com.shuttleverse.community.dto.CourtScheduleResponse;
+import com.shuttleverse.community.mapper.MapStructMapper;
 import com.shuttleverse.community.model.Court;
 import com.shuttleverse.community.model.CourtPrice;
 import com.shuttleverse.community.model.CourtSchedule;
@@ -39,9 +43,10 @@ public class CourtController {
 
   private final CourtService courtService;
   private final UserService userService;
+  private final MapStructMapper mapper;
 
   @GetMapping
-  public ResponseEntity<ApiResponse<Page<Court>>> getAllCourts(
+  public ResponseEntity<ApiResponse<Page<CourtResponse>>> getAllCourts(
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size,
       @RequestParam(defaultValue = "name") String sortBy,
@@ -61,11 +66,12 @@ public class CourtController {
         sortBy);
 
     Page<Court> courts = courtService.getAllCourts(filters, pageable);
-    return ResponseEntity.ok(ApiResponse.success(courts));
+    Page<CourtResponse> response = courts.map(mapper::toCourtResponse);
+    return ResponseEntity.ok(ApiResponse.success(response));
   }
 
   @PostMapping
-  public ResponseEntity<ApiResponse<Court>> createCourt(
+  public ResponseEntity<ApiResponse<CourtResponse>> createCourt(
       @Validated @RequestBody Court court,
       @AuthenticationPrincipal Jwt jwt) {
 
@@ -73,22 +79,23 @@ public class CourtController {
     User creator = userService.findBySub(sub)
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-    return ResponseEntity.ok(ApiResponse.success(courtService.createCourt(creator, court)));
+    Court createdCourt = courtService.createCourt(creator, court);
+    return ResponseEntity.ok(ApiResponse.success(mapper.toCourtResponse(createdCourt)));
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ApiResponse<Court>> getCourt(@PathVariable String id) {
+  public ResponseEntity<ApiResponse<CourtResponse>> getCourt(@PathVariable String id) {
     Court court = courtService.getCourt(UUID.fromString(id));
-    return ResponseEntity.ok(ApiResponse.success(court));
+    return ResponseEntity.ok(ApiResponse.success(mapper.toCourtResponse(court)));
   }
 
   @PutMapping("/{id}")
   @PreAuthorize("isAuthenticated()")
-  public ResponseEntity<ApiResponse<Court>> updateCourt(
+  public ResponseEntity<ApiResponse<CourtResponse>> updateCourt(
       @PathVariable String id,
       @Validated @RequestBody Court court) {
     Court updatedCourt = courtService.updateCourt(UUID.fromString(id), court);
-    return ResponseEntity.ok(ApiResponse.success(updatedCourt));
+    return ResponseEntity.ok(ApiResponse.success(mapper.toCourtResponse(updatedCourt)));
   }
 
   @DeleteMapping("/{id}")
@@ -100,7 +107,7 @@ public class CourtController {
 
   @PostMapping("/{id}/schedule")
   @PreAuthorize("isAuthenticated()")
-  public ResponseEntity<ApiResponse<List<CourtSchedule>>> addSchedule(
+  public ResponseEntity<ApiResponse<List<CourtScheduleResponse>>> addSchedule(
       @PathVariable String id,
       @Validated @RequestBody List<CourtSchedule> schedule,
       @AuthenticationPrincipal Jwt jwt) {
@@ -109,12 +116,15 @@ public class CourtController {
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
     List<CourtSchedule> newSchedule = courtService.addSchedule(creator, UUID.fromString(id),
         schedule);
-    return ResponseEntity.ok(ApiResponse.success(newSchedule));
+    List<CourtScheduleResponse> response = newSchedule.stream()
+        .map(mapper::toCourtScheduleResponse)
+        .toList();
+    return ResponseEntity.ok(ApiResponse.success(response));
   }
 
   @PostMapping("/{id}/price")
   @PreAuthorize("isAuthenticated()")
-  public ResponseEntity<ApiResponse<List<CourtPrice>>> addPrice(
+  public ResponseEntity<ApiResponse<List<CourtPriceResponse>>> addPrice(
       @PathVariable String id,
       @Validated @RequestBody List<CourtPrice> prices,
       @AuthenticationPrincipal Jwt jwt) {
@@ -123,34 +133,34 @@ public class CourtController {
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
     List<CourtPrice> newPrices = courtService.addPrice(creator, UUID.fromString(id), prices);
-    return ResponseEntity.ok(ApiResponse.success(newPrices));
+    List<CourtPriceResponse> response = newPrices.stream()
+        .map(mapper::toCourtPriceResponse)
+        .toList();
+    return ResponseEntity.ok(ApiResponse.success(response));
   }
 
   @PutMapping("/{id}/schedule/{scheduleId}")
   @PreAuthorize("@courtService.isOwner(#id, authentication.principal)")
-  public ResponseEntity<ApiResponse<CourtSchedule>> updateSchedule(
+  public ResponseEntity<ApiResponse<CourtScheduleResponse>> updateSchedule(
       @PathVariable String id,
       @PathVariable String scheduleId,
       @Validated @RequestBody CourtSchedule schedule) {
-    return ResponseEntity.ok(
-        ApiResponse.success(
-            courtService.updateSchedule(UUID.fromString(id), UUID.fromString(scheduleId),
-                schedule)));
+    CourtSchedule updatedSchedule = courtService.updateSchedule(UUID.fromString(id), UUID.fromString(scheduleId),
+        schedule);
+    return ResponseEntity.ok(ApiResponse.success(mapper.toCourtScheduleResponse(updatedSchedule)));
   }
 
   @PostMapping("/schedule/{scheduleId}/upvote")
-  public ResponseEntity<ApiResponse<CourtSchedule>> upvoteSchedule(
+  public ResponseEntity<ApiResponse<CourtScheduleResponse>> upvoteSchedule(
       @PathVariable String scheduleId) {
-    return ResponseEntity.ok(
-        ApiResponse.success(courtService.upvoteSchedule(UUID.fromString(scheduleId))));
+    CourtSchedule schedule = courtService.upvoteSchedule(UUID.fromString(scheduleId));
+    return ResponseEntity.ok(ApiResponse.success(mapper.toCourtScheduleResponse(schedule)));
   }
 
-  @PostMapping("/price/{scheduleId}/upvote")
-  public ResponseEntity<ApiResponse<CourtPrice>> upvotePrice(
-      @PathVariable String scheduleId
-  ) {
-    return ResponseEntity.ok(
-        ApiResponse.success(courtService.upvotePrice(UUID.fromString(scheduleId)))
-    );
+  @PostMapping("/price/{priceId}/upvote")
+  public ResponseEntity<ApiResponse<CourtPriceResponse>> upvotePrice(
+      @PathVariable String priceId) {
+    CourtPrice price = courtService.upvotePrice(UUID.fromString(priceId));
+    return ResponseEntity.ok(ApiResponse.success(mapper.toCourtPriceResponse(price)));
   }
 }

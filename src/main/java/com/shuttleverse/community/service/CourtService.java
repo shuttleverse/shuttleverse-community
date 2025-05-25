@@ -65,6 +65,8 @@ public class CourtService {
 
   @Transactional
   public List<CourtSchedule> addSchedule(User creator, UUID courtId, List<CourtSchedule> schedule) {
+    getCourt(courtId);
+
     for (CourtSchedule courtSchedule : schedule) {
       courtSchedule.setSubmittedBy(creator);
       courtSchedule.setCourtId(courtId);
@@ -94,6 +96,8 @@ public class CourtService {
 
   @Transactional
   public List<CourtPrice> addPrice(User creator, UUID courtId, List<CourtPrice> prices) {
+    getCourt(courtId);
+
     for (CourtPrice price : prices) {
       price.setSubmittedBy(creator);
       price.setCourtId(courtId);
