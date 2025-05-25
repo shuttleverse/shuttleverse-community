@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -28,8 +27,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.ActiveProfiles;
 
 @ExtendWith(MockitoExtension.class)
+@ActiveProfiles("test")
 class CourtServiceTest {
 
   @Mock
@@ -123,37 +124,36 @@ class CourtServiceTest {
 
   @Test
   void addSchedule_Success() {
-    when(courtRepository.findById(any(UUID.class))).thenReturn(Optional.of(court));
-    when(scheduleRepository.saveAll(anyList())).thenReturn(List.of(schedule));
+    UUID courtId = UUID.fromString("99e4fbf4-bb57-4484-bc7e-9999926bcf01");
+    Court court = new Court();
+    court.setId(courtId);
+    court.setOwner(user);
+    when(courtRepository.findById(courtId)).thenReturn(Optional.of(court));
+    when(scheduleRepository.saveAll(any())).thenReturn(List.of(schedule));
 
-    List<CourtSchedule> schedules = List.of(schedule);
-    List<CourtSchedule> results = courtService.addSchedule(user, courtId, schedules);
+    List<CourtSchedule> result = courtService.addSchedule(user, courtId, List.of(schedule));
 
-    assertNotNull(results);
-    assertEquals(1, results.size());
-    assertEquals(schedule.getId(), results.get(0).getId());
-    assertEquals(schedule.getDayOfWeek(), results.get(0).getDayOfWeek());
-    assertEquals(schedule.getOpenTime(), results.get(0).getOpenTime());
-    assertEquals(schedule.getCloseTime(), results.get(0).getCloseTime());
     verify(courtRepository).findById(courtId);
-    verify(scheduleRepository).saveAll(anyList());
+    verify(scheduleRepository).saveAll(any());
+    assertEquals(1, result.size());
+    assertEquals(schedule, result.get(0));
   }
 
   @Test
   void addPrice_Success() {
-    when(courtRepository.findById(any(UUID.class))).thenReturn(Optional.of(court));
-    when(priceRepository.saveAll(anyList())).thenReturn(List.of(price));
+    UUID courtId = UUID.fromString("82f6bd6a-4df1-455d-88b7-c645d1de8ce8");
+    Court court = new Court();
+    court.setId(courtId);
+    court.setOwner(user);
+    when(courtRepository.findById(courtId)).thenReturn(Optional.of(court));
+    when(priceRepository.saveAll(any())).thenReturn(List.of(price));
 
-    List<CourtPrice> prices = List.of(price);
-    List<CourtPrice> results = courtService.addPrice(user, courtId, prices);
+    List<CourtPrice> result = courtService.addPrice(user, courtId, List.of(price));
 
-    assertNotNull(results);
-    assertEquals(1, results.size());
-    assertEquals(price.getId(), results.get(0).getId());
-    assertEquals(price.getPrice(), results.get(0).getPrice());
-    assertEquals(price.getDuration(), results.get(0).getDuration());
     verify(courtRepository).findById(courtId);
-    verify(priceRepository).saveAll(anyList());
+    verify(priceRepository).saveAll(any());
+    assertEquals(1, result.size());
+    assertEquals(price, result.get(0));
   }
 
   @Test

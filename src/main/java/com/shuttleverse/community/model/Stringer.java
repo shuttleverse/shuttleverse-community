@@ -1,6 +1,5 @@
 package com.shuttleverse.community.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -51,8 +50,8 @@ public class Stringer {
   @Column(name = "additional_details")
   private String additionalDetails;
 
-  @OneToMany(mappedBy = "stringer", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-  @JsonManagedReference("stringer-price")
+  @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  @JoinColumn(name = "stringer_id")
   private List<StringerPrice> priceList;
 
   @Column(name = "created_at", nullable = false)
