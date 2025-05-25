@@ -61,6 +61,8 @@ public class StringerService {
 
   @Transactional
   public List<StringerPrice> addPrice(User creator, UUID stringerId, List<StringerPrice> prices) {
+    getStringer(stringerId);
+
     for (StringerPrice price : prices) {
       price.setSubmittedBy(creator);
       price.setStringerId(stringerId);
@@ -70,6 +72,8 @@ public class StringerService {
 
   @Transactional
   public StringerPrice updatePrice(UUID stringerId, UUID priceId, StringerPrice price) {
+    getStringer(stringerId);
+
     if (!isOwner(stringerId, price.getSubmittedBy().getId())) {
       throw new AccessDeniedException("Only the owner can update price");
     }

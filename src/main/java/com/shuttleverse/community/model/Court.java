@@ -1,8 +1,5 @@
 package com.shuttleverse.community.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,8 +21,6 @@ import lombok.Data;
 @Entity
 @Table(name = "court")
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Court {
 
   @Id
@@ -57,12 +52,12 @@ public class Court {
   @Column(name = "updated_at", nullable = false)
   private ZonedDateTime updatedAt;
 
-  @OneToMany(mappedBy = "court", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-  @JsonManagedReference("court-schedule")
+  @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  @JoinColumn(name = "court_id")
   private List<CourtSchedule> scheduleList;
 
-  @OneToMany(mappedBy = "court", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-  @JsonManagedReference("court-price")
+  @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  @JoinColumn(name = "court_id")
   private List<CourtPrice> priceList;
 
   @ManyToOne(fetch = FetchType.LAZY)

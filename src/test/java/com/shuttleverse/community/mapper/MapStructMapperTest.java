@@ -25,10 +25,15 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
+@SpringBootTest
+@ActiveProfiles("test")
 class MapStructMapperTest {
 
+  @Autowired
   private MapStructMapper mapper;
   private User user;
   private UUID userId;
@@ -38,7 +43,6 @@ class MapStructMapperTest {
 
   @BeforeEach
   void setUp() {
-    mapper = Mappers.getMapper(MapStructMapper.class);
     userId = UUID.randomUUID();
     priceId = UUID.randomUUID();
     entityId = UUID.randomUUID();

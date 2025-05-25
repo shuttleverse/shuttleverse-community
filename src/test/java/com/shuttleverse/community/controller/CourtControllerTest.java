@@ -9,6 +9,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.shuttleverse.community.api.ApiResponse;
+import com.shuttleverse.community.dto.CourtPriceResponse;
+import com.shuttleverse.community.dto.CourtResponse;
+import com.shuttleverse.community.dto.CourtScheduleResponse;
+import com.shuttleverse.community.mapper.MapStructMapper;
 import com.shuttleverse.community.model.Court;
 import com.shuttleverse.community.model.CourtPrice;
 import com.shuttleverse.community.model.CourtSchedule;
@@ -39,6 +43,9 @@ class CourtControllerTest {
   @Mock
   private UserService userService;
 
+  @Mock
+  private MapStructMapper mapper;
+
   @InjectMocks
   private CourtController courtController;
 
@@ -50,6 +57,9 @@ class CourtControllerTest {
   private UUID scheduleId;
   private UUID priceId;
   private Jwt jwt;
+  private CourtResponse courtResponse;
+  private CourtScheduleResponse scheduleResponse;
+  private CourtPriceResponse priceResponse;
 
   @BeforeEach
   void setUp() {
@@ -84,7 +94,21 @@ class CourtControllerTest {
     price.setUpvotes(0);
     price.setIsVerified(false);
 
-    // Mock JWT token
+    courtResponse = new CourtResponse();
+    courtResponse.setId(courtId);
+    courtResponse.setName("Test Court");
+
+    scheduleResponse = new CourtScheduleResponse();
+    scheduleResponse.setId(scheduleId);
+    scheduleResponse.setDayOfWeek(1);
+    scheduleResponse.setStartTime("09:00");
+    scheduleResponse.setEndTime("17:00");
+
+    priceResponse = new CourtPriceResponse();
+    priceResponse.setId(priceId);
+    priceResponse.setPrice(100.0);
+    priceResponse.setDuration(60);
+
     jwt = Jwt.withTokenValue("token")
         .header("alg", "none")
         .claim("sub", "user-123")
@@ -95,34 +119,39 @@ class CourtControllerTest {
   void createCourt_Success() {
     when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
     when(courtService.createCourt(any(User.class), any(Court.class))).thenReturn(court);
+    when(mapper.toCourtResponse(any(Court.class))).thenReturn(courtResponse);
 
-    ResponseEntity<ApiResponse<Court>> response = courtController.createCourt(court, jwt);
+    ResponseEntity<ApiResponse<CourtResponse>> response = courtController.createCourt(court, jwt);
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
-    assertEquals(court, response.getBody().getData());
+    assertEquals(courtResponse, response.getBody().getData());
     verify(courtService).createCourt(any(User.class), any(Court.class));
   }
 
   @Test
   void getCourt_Success() {
     when(courtService.getCourt(any(UUID.class))).thenReturn(court);
+    when(mapper.toCourtResponse(any(Court.class))).thenReturn(courtResponse);
 
-    ResponseEntity<ApiResponse<Court>> response = courtController.getCourt(courtId.toString());
+    ResponseEntity<ApiResponse<CourtResponse>> response = courtController.getCourt(
+        courtId.toString());
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
-    assertEquals(court, response.getBody().getData());
+    assertEquals(courtResponse, response.getBody().getData());
     verify(courtService).getCourt(courtId);
   }
 
   @Test
   void updateCourt_Success() {
     when(courtService.updateCourt(any(UUID.class), any(Court.class))).thenReturn(court);
+    when(mapper.toCourtResponse(any(Court.class))).thenReturn(courtResponse);
 
-    ResponseEntity<ApiResponse<Court>> response = courtController.updateCourt(courtId.toString(),
+    ResponseEntity<ApiResponse<CourtResponse>> response = courtController.updateCourt(
+        courtId.toString(),
         court);
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
-    assertEquals(court, response.getBody().getData());
+    assertEquals(courtResponse, response.getBody().getData());
     verify(courtService).updateCourt(courtId, court);
   }
 
@@ -142,126 +171,46 @@ class CourtControllerTest {
     when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
     doReturn(schedules).when(courtService)
         .addSchedule(any(User.class), any(UUID.class), any(List.class));
+    when(mapper.toCourtScheduleResponse(any(CourtSchedule.class))).thenReturn(scheduleResponse);
 
-    ResponseEntity<ApiResponse<List<CourtSchedule>>> response = courtController.addSchedule(
+    ResponseEntity<ApiResponse<List<CourtScheduleResponse>>> response = courtController.addSchedule(
         courtId.toString(),
         schedules,
         jwt);
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
     assertEquals(1, response.getBody().getData().size());
-    assertEquals(schedule, response.getBody().getData().get(0));
+    assertEquals(scheduleResponse, response.getBody().getData().get(0));
     verify(courtService).addSchedule(any(User.class), any(UUID.class), any(List.class));
   }
 
   @Test
   void updateSchedule_Success() {
     when(courtService.updateSchedule(any(UUID.class), any(UUID.class),
-        any(CourtSchedule.class))).thenReturn(
-        schedule);
+        any(CourtSchedule.class))).thenReturn(schedule);
+    when(mapper.toCourtScheduleResponse(any(CourtSchedule.class))).thenReturn(scheduleResponse);
 
-    ResponseEntity<ApiResponse<CourtSchedule>> response = courtController.updateSchedule(
+    ResponseEntity<ApiResponse<CourtScheduleResponse>> response = courtController.updateSchedule(
         courtId.toString(),
         scheduleId.toString(),
         schedule);
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
-    assertEquals(schedule, response.getBody().getData());
+    assertEquals(scheduleResponse, response.getBody().getData());
     verify(courtService).updateSchedule(courtId, scheduleId, schedule);
   }
 
   @Test
   void upvoteSchedule_Success() {
     when(courtService.upvoteSchedule(any(UUID.class))).thenReturn(schedule);
+    when(mapper.toCourtScheduleResponse(any(CourtSchedule.class))).thenReturn(scheduleResponse);
 
-    ResponseEntity<ApiResponse<CourtSchedule>> response = courtController.upvoteSchedule(
+    ResponseEntity<ApiResponse<CourtScheduleResponse>> response = courtController.upvoteSchedule(
         scheduleId.toString());
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
-    assertEquals(schedule, response.getBody().getData());
+    assertEquals(scheduleResponse, response.getBody().getData());
     verify(courtService).upvoteSchedule(scheduleId);
-  }
-
-  @Test
-  void addCourtWithSchedule_Success() {
-    CourtSchedule schedule = new CourtSchedule();
-    schedule.setId(UUID.randomUUID());
-    schedule.setDayOfWeek(1);
-    schedule.setOpenTime("09:00");
-    schedule.setCloseTime("22:00");
-    schedule.setUpvotes(0);
-    schedule.setVerified(false);
-    schedule.setSubmittedBy(user);
-    schedule.setCourtId(courtId);
-
-    when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
-    when(courtService.createCourt(any(User.class), any(Court.class))).thenReturn(court);
-    doReturn(List.of(schedule)).when(courtService)
-        .addSchedule(any(User.class), any(UUID.class), any(List.class));
-
-    ResponseEntity<ApiResponse<Court>> courtResponse = courtController.createCourt(court, jwt);
-    assertTrue(Objects.requireNonNull(courtResponse.getBody()).isSuccess());
-    assertEquals(court, courtResponse.getBody().getData());
-
-    ResponseEntity<ApiResponse<List<CourtSchedule>>> scheduleResponse = courtController.addSchedule(
-        courtId.toString(),
-        List.of(schedule),
-        jwt);
-    assertTrue(Objects.requireNonNull(scheduleResponse.getBody()).isSuccess());
-    assertEquals(1, scheduleResponse.getBody().getData().size());
-    assertEquals(schedule, scheduleResponse.getBody().getData().get(0));
-
-    verify(courtService).createCourt(any(User.class), any(Court.class));
-    verify(courtService).addSchedule(any(User.class), any(UUID.class), any(List.class));
-  }
-
-  @Test
-  void upvoteCourtSchedule_Success() {
-    CourtSchedule schedule = new CourtSchedule();
-    schedule.setId(scheduleId);
-    schedule.setDayOfWeek(1);
-    schedule.setOpenTime("09:00");
-    schedule.setCloseTime("22:00");
-    schedule.setUpvotes(1);
-    schedule.setVerified(false);
-    schedule.setSubmittedBy(user);
-    schedule.setCourtId(courtId);
-
-    when(courtService.upvoteSchedule(any(UUID.class))).thenReturn(schedule);
-
-    ResponseEntity<ApiResponse<CourtSchedule>> response = courtController.upvoteSchedule(
-        scheduleId.toString());
-
-    assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
-    assertEquals(schedule, response.getBody().getData());
-    assertEquals(1, response.getBody().getData().getUpvotes());
-    verify(courtService).upvoteSchedule(scheduleId);
-  }
-
-  @Test
-  void addNewScheduleForExistingCourt_Success() {
-    CourtSchedule newSchedule = new CourtSchedule();
-    newSchedule.setDayOfWeek(2); // Tuesday
-    newSchedule.setOpenTime("10:00");
-    newSchedule.setCloseTime("21:00");
-    newSchedule.setUpvotes(0);
-    newSchedule.setVerified(false);
-    newSchedule.setSubmittedBy(user);
-    newSchedule.setCourtId(courtId);
-
-    when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
-    doReturn(List.of(newSchedule)).when(courtService).addSchedule(any(User.class), any(UUID.class),
-        any(List.class));
-
-    ResponseEntity<ApiResponse<List<CourtSchedule>>> response = courtController.addSchedule(
-        courtId.toString(),
-        List.of(newSchedule),
-        jwt);
-
-    assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
-    assertEquals(1, response.getBody().getData().size());
-    assertEquals(newSchedule, response.getBody().getData().get(0));
-    verify(courtService).addSchedule(any(User.class), any(UUID.class), any(List.class));
   }
 
   @Test
@@ -269,15 +218,29 @@ class CourtControllerTest {
     List<CourtPrice> prices = List.of(price);
     when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
     doReturn(prices).when(courtService).addPrice(any(User.class), any(UUID.class), any(List.class));
+    when(mapper.toCourtPriceResponse(any(CourtPrice.class))).thenReturn(priceResponse);
 
-    ResponseEntity<ApiResponse<List<CourtPrice>>> response = courtController.addPrice(
+    ResponseEntity<ApiResponse<List<CourtPriceResponse>>> response = courtController.addPrice(
         courtId.toString(),
         prices,
         jwt);
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
     assertEquals(1, response.getBody().getData().size());
-    assertEquals(price, response.getBody().getData().get(0));
+    assertEquals(priceResponse, response.getBody().getData().get(0));
     verify(courtService).addPrice(any(User.class), any(UUID.class), any(List.class));
+  }
+
+  @Test
+  void upvotePrice_Success() {
+    when(courtService.upvotePrice(any(UUID.class))).thenReturn(price);
+    when(mapper.toCourtPriceResponse(any(CourtPrice.class))).thenReturn(priceResponse);
+
+    ResponseEntity<ApiResponse<CourtPriceResponse>> response = courtController.upvotePrice(
+        priceId.toString());
+
+    assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
+    assertEquals(priceResponse, response.getBody().getData());
+    verify(courtService).upvotePrice(priceId);
   }
 }

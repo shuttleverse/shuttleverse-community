@@ -18,8 +18,11 @@ import com.shuttleverse.community.model.Stringer;
 import com.shuttleverse.community.model.StringerPrice;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
+import org.springframework.context.annotation.Primary;
 
-@Mapper(componentModel = "spring")
+@Primary
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface MapStructMapper {
 
   CoachResponse toCoachResponse(Coach coach);

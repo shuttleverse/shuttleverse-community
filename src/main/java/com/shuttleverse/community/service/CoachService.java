@@ -66,6 +66,8 @@ public class CoachService {
   @Transactional
   public List<CoachSchedule> addSchedule(User creator, UUID coachId,
       List<CoachSchedule> schedules) {
+    getCoach(coachId);
+
     for (CoachSchedule schedule : schedules) {
       schedule.setSubmittedBy(creator);
       schedule.setCoachId(coachId);
