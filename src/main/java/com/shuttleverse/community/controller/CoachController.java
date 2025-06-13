@@ -1,6 +1,7 @@
 package com.shuttleverse.community.controller;
 
 import com.shuttleverse.community.api.ApiResponse;
+import com.shuttleverse.community.dto.CoachCreationData;
 import com.shuttleverse.community.dto.CoachPriceResponse;
 import com.shuttleverse.community.dto.CoachResponse;
 import com.shuttleverse.community.dto.CoachScheduleResponse;
@@ -72,13 +73,14 @@ public class CoachController {
 
   @PostMapping
   public ResponseEntity<ApiResponse<CoachResponse>> createCoach(
-      @Validated @RequestBody Coach coach,
+      @Validated @RequestBody CoachCreationData coachCreationData,
       @AuthenticationPrincipal Jwt jwt) {
 
     String sub = jwt.getSubject();
     User creator = userService.findBySub(sub)
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
+    Coach coach = mapper.toCoach(coachCreationData);
     Coach createdCoach = coachService.createCoach(coach, creator);
     return ResponseEntity.ok(ApiResponse.success(mapper.toCoachResponse(createdCoach)));
   }

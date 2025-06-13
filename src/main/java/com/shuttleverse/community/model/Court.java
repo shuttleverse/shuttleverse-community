@@ -17,6 +17,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.Data;
+import org.locationtech.jts.geom.Point;
 
 @Entity
 @Table(name = "court")
@@ -24,7 +25,7 @@ import lombok.Data;
 public class Court {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @GeneratedValue(strategy = GenerationType.UUID)
   @Column(name = "court_id")
   private UUID id;
 
@@ -34,7 +35,10 @@ public class Court {
   @Column(name = "location", nullable = false)
   private String location;
 
-  @Column(name = "description")
+  @Column(name = "location_point")
+  private Point locationPoint;
+
+  @Column(name = "description", length = 400)
   private String description;
 
   @Column(name = "website")

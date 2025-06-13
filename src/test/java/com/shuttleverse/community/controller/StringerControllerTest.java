@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import com.shuttleverse.community.api.ApiResponse;
 import com.shuttleverse.community.dto.StringerPriceResponse;
 import com.shuttleverse.community.dto.StringerResponse;
+import com.shuttleverse.community.dto.StringerCreationData;
 import com.shuttleverse.community.mapper.MapStructMapper;
 import com.shuttleverse.community.model.Stringer;
 import com.shuttleverse.community.model.StringerPrice;
@@ -55,6 +56,7 @@ class StringerControllerTest {
   private Jwt jwt;
   private StringerResponse stringerResponse;
   private StringerPriceResponse priceResponse;
+  private StringerCreationData stringerCreationData;
 
   @BeforeEach
   void setUp() {
@@ -70,6 +72,13 @@ class StringerControllerTest {
     stringer.setId(stringerId);
     stringer.setName("Test Stringer");
     stringer.setOwner(user);
+
+    stringerCreationData = new StringerCreationData();
+    stringerCreationData.setName("Test Stringer");
+    stringerCreationData.setLocation("Test Location");
+    stringerCreationData.setDescription("Test Description");
+    stringerCreationData.setOtherContacts("Test Contacts");
+    stringerCreationData.setPhoneNumber("1234567890");
 
     price = new StringerPrice();
     price.setId(priceId);
@@ -98,15 +107,17 @@ class StringerControllerTest {
   @Test
   void createStringer_Success() {
     when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
+    when(mapper.toStringer(any(StringerCreationData.class))).thenReturn(stringer);
     when(stringerService.createStringer(any(Stringer.class), any(User.class))).thenReturn(stringer);
     when(mapper.toStringerResponse(any(Stringer.class))).thenReturn(stringerResponse);
 
     ResponseEntity<ApiResponse<StringerResponse>> response = stringerController.createStringer(
-        stringer,
+        stringerCreationData,
         jwt);
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
     assertEquals(stringerResponse, response.getBody().getData());
+    verify(mapper).toStringer(any(StringerCreationData.class));
     verify(stringerService).createStringer(any(Stringer.class), any(User.class));
   }
 

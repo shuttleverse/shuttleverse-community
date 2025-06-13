@@ -21,7 +21,7 @@ import lombok.Data;
 public class CourtSchedule {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @GeneratedValue(strategy = GenerationType.UUID)
   @Column(name = "schedule_id")
   private UUID id;
 

@@ -12,6 +12,7 @@ import com.shuttleverse.community.api.ApiResponse;
 import com.shuttleverse.community.dto.CoachPriceResponse;
 import com.shuttleverse.community.dto.CoachResponse;
 import com.shuttleverse.community.dto.CoachScheduleResponse;
+import com.shuttleverse.community.dto.CoachCreationData;
 import com.shuttleverse.community.mapper.MapStructMapper;
 import com.shuttleverse.community.model.Coach;
 import com.shuttleverse.community.model.CoachPrice;
@@ -60,6 +61,7 @@ class CoachControllerTest {
   private CoachResponse coachResponse;
   private CoachScheduleResponse scheduleResponse;
   private CoachPriceResponse priceResponse;
+  private CoachCreationData coachCreationData;
 
   @BeforeEach
   void setUp() {
@@ -76,6 +78,13 @@ class CoachControllerTest {
     coach.setId(coachId);
     coach.setName("Test Coach");
     coach.setOwner(user);
+
+    coachCreationData = new CoachCreationData();
+    coachCreationData.setName("Test Coach");
+    coachCreationData.setLocation("Test Location");
+    coachCreationData.setDescription("Test Description");
+    coachCreationData.setOtherContacts("Test Contacts");
+    coachCreationData.setPhoneNumber("1234567890");
 
     schedule = new CoachSchedule();
     schedule.setId(scheduleId);
@@ -118,13 +127,15 @@ class CoachControllerTest {
   @Test
   void createCoach_Success() {
     when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
+    when(mapper.toCoach(any(CoachCreationData.class))).thenReturn(coach);
     when(coachService.createCoach(any(Coach.class), any(User.class))).thenReturn(coach);
     when(mapper.toCoachResponse(any(Coach.class))).thenReturn(coachResponse);
 
-    ResponseEntity<ApiResponse<CoachResponse>> response = coachController.createCoach(coach, jwt);
+    ResponseEntity<ApiResponse<CoachResponse>> response = coachController.createCoach(coachCreationData, jwt);
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
     assertEquals(coachResponse, response.getBody().getData());
+    verify(mapper).toCoach(any(CoachCreationData.class));
     verify(coachService).createCoach(any(Coach.class), any(User.class));
   }
 
