@@ -20,7 +20,7 @@ FROM --platform=linux/arm64 openjdk:17-jdk-slim
 WORKDIR /app
 
 # Copy the built jar from the build stage
-COPY --from=build /app/target/shuttleverse-gateway.jar /app/shuttleverse-community.jar
+COPY --from=build /app/target/shuttleverse-community.jar /app/shuttleverse-community.jar
 
 EXPOSE 8083
 
