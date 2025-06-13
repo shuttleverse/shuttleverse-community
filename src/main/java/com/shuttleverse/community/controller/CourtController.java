@@ -1,6 +1,7 @@
 package com.shuttleverse.community.controller;
 
 import com.shuttleverse.community.api.ApiResponse;
+import com.shuttleverse.community.dto.CourtCreationData;
 import com.shuttleverse.community.dto.CourtPriceResponse;
 import com.shuttleverse.community.dto.CourtResponse;
 import com.shuttleverse.community.dto.CourtScheduleResponse;
@@ -72,12 +73,14 @@ public class CourtController {
 
   @PostMapping
   public ResponseEntity<ApiResponse<CourtResponse>> createCourt(
-      @Validated @RequestBody Court court,
+      @Validated @RequestBody CourtCreationData courtCreationData,
       @AuthenticationPrincipal Jwt jwt) {
 
     String sub = jwt.getSubject();
     User creator = userService.findBySub(sub)
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+    Court court = mapper.toCourt(courtCreationData);
 
     Court createdCourt = courtService.createCourt(creator, court);
     return ResponseEntity.ok(ApiResponse.success(mapper.toCourtResponse(createdCourt)));
@@ -145,7 +148,8 @@ public class CourtController {
       @PathVariable String id,
       @PathVariable String scheduleId,
       @Validated @RequestBody CourtSchedule schedule) {
-    CourtSchedule updatedSchedule = courtService.updateSchedule(UUID.fromString(id), UUID.fromString(scheduleId),
+    CourtSchedule updatedSchedule = courtService.updateSchedule(UUID.fromString(id),
+        UUID.fromString(scheduleId),
         schedule);
     return ResponseEntity.ok(ApiResponse.success(mapper.toCourtScheduleResponse(updatedSchedule)));
   }

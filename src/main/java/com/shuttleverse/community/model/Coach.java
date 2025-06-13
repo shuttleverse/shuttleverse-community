@@ -17,6 +17,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.Data;
+import org.locationtech.jts.geom.Point;
 
 @Entity
 @Table(name = "coach")
@@ -24,7 +25,7 @@ import lombok.Data;
 public class Coach {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @GeneratedValue(strategy = GenerationType.UUID)
   @Column(name = "coach_id")
   private UUID id;
 
@@ -35,8 +36,11 @@ public class Coach {
   @Column(nullable = false, length = 100)
   private String name;
 
-  @Column
+  @Column(length = 100)
   private String location;
+
+  @Column(name = "location_point")
+  private Point locationPoint;
 
   @Column(length = 1000)
   private String description;

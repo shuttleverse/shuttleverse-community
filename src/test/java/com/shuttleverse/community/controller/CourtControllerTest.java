@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.shuttleverse.community.api.ApiResponse;
+import com.shuttleverse.community.dto.CourtCreationData;
 import com.shuttleverse.community.dto.CourtPriceResponse;
 import com.shuttleverse.community.dto.CourtResponse;
 import com.shuttleverse.community.dto.CourtScheduleResponse;
@@ -60,6 +61,7 @@ class CourtControllerTest {
   private CourtResponse courtResponse;
   private CourtScheduleResponse scheduleResponse;
   private CourtPriceResponse priceResponse;
+  private CourtCreationData courtCreationData;
 
   @BeforeEach
   void setUp() {
@@ -76,6 +78,13 @@ class CourtControllerTest {
     court.setId(courtId);
     court.setName("Test Court");
     court.setOwner(user);
+
+    courtCreationData = new CourtCreationData();
+    courtCreationData.setName("Test Court");
+    courtCreationData.setLocation("Test Location");
+    courtCreationData.setDescription("Test Description");
+    courtCreationData.setOtherContacts("Test Contacts");
+    courtCreationData.setPhoneNumber("1234567890");
 
     schedule = new CourtSchedule();
     schedule.setId(scheduleId);
@@ -118,13 +127,15 @@ class CourtControllerTest {
   @Test
   void createCourt_Success() {
     when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
+    when(mapper.toCourt(any(CourtCreationData.class))).thenReturn(court);
     when(courtService.createCourt(any(User.class), any(Court.class))).thenReturn(court);
     when(mapper.toCourtResponse(any(Court.class))).thenReturn(courtResponse);
 
-    ResponseEntity<ApiResponse<CourtResponse>> response = courtController.createCourt(court, jwt);
+    ResponseEntity<ApiResponse<CourtResponse>> response = courtController.createCourt(courtCreationData, jwt);
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
     assertEquals(courtResponse, response.getBody().getData());
+    verify(mapper).toCourt(any(CourtCreationData.class));
     verify(courtService).createCourt(any(User.class), any(Court.class));
   }
 
