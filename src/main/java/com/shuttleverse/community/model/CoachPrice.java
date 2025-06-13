@@ -21,7 +21,7 @@ import lombok.Data;
 public class CoachPrice {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @GeneratedValue(strategy = GenerationType.UUID)
   @Column(name = "price_id")
   private UUID id;
 

@@ -21,7 +21,7 @@ import lombok.Data;
 public class OwnershipClaim {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @GeneratedValue(strategy = GenerationType.UUID)
   @Column(name = "claim_id")
   private UUID id;
 

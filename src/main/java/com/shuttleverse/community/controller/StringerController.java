@@ -1,6 +1,7 @@
 package com.shuttleverse.community.controller;
 
 import com.shuttleverse.community.api.ApiResponse;
+import com.shuttleverse.community.dto.StringerCreationData;
 import com.shuttleverse.community.dto.StringerPriceResponse;
 import com.shuttleverse.community.dto.StringerResponse;
 import com.shuttleverse.community.mapper.MapStructMapper;
@@ -70,13 +71,14 @@ public class StringerController {
 
   @PostMapping
   public ResponseEntity<ApiResponse<StringerResponse>> createStringer(
-      @Validated @RequestBody Stringer stringer,
+      @Validated @RequestBody StringerCreationData stringerCreationData,
       @AuthenticationPrincipal Jwt jwt) {
 
     String sub = jwt.getSubject();
     User creator = userService.findBySub(sub)
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
+    Stringer stringer = mapper.toStringer(stringerCreationData);
     Stringer createdStringer = stringerService.createStringer(stringer, creator);
     return ResponseEntity.ok(ApiResponse.success(mapper.toStringerResponse(createdStringer)));
   }

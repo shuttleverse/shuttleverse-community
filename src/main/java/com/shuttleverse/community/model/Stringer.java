@@ -17,6 +17,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.Data;
+import org.locationtech.jts.geom.Point;
 
 @Entity
 @Table(name = "stringer")
@@ -24,7 +25,7 @@ import lombok.Data;
 public class Stringer {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @GeneratedValue(strategy = GenerationType.UUID)
   @Column(name = "stringer_id")
   private UUID id;
 
@@ -38,13 +39,16 @@ public class Stringer {
   @Column(name = "location")
   private String location;
 
-  @Column(name = "description")
+  @Column(name = "location_point")
+  private Point locationPoint;
+
+  @Column(name = "description", length = 400)
   private String description;
 
   @Column(name = "other_contacts", nullable = false)
   private String otherContacts;
 
-  @Column(name = "phone_number")
+  @Column(name = "phone_number", length = 20)
   private String phoneNumber;
 
   @Column(name = "additional_details")
