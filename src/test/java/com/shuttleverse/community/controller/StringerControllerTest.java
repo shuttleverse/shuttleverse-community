@@ -9,9 +9,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.shuttleverse.community.api.ApiResponse;
+import com.shuttleverse.community.dto.StringerCreationData;
 import com.shuttleverse.community.dto.StringerPriceResponse;
 import com.shuttleverse.community.dto.StringerResponse;
-import com.shuttleverse.community.dto.StringerCreationData;
 import com.shuttleverse.community.mapper.MapStructMapper;
 import com.shuttleverse.community.model.Stringer;
 import com.shuttleverse.community.model.StringerPrice;
@@ -245,15 +245,16 @@ class StringerControllerTest {
 
   @Test
   void upvotePrice_Success() {
-    when(stringerService.upvotePrice(any(UUID.class))).thenReturn(price);
+    when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
+    when(stringerService.upvotePrice(any(UUID.class), any(User.class))).thenReturn(price);
     when(mapper.toStringerPriceResponse(any(StringerPrice.class))).thenReturn(priceResponse);
 
     ResponseEntity<ApiResponse<StringerPriceResponse>> response = stringerController.upvotePrice(
-        priceId.toString());
+        priceId.toString(), jwt);
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
     assertEquals(priceResponse, response.getBody().getData());
-    verify(stringerService).upvotePrice(priceId);
+    verify(stringerService).upvotePrice(priceId, user);
   }
 
   @Test

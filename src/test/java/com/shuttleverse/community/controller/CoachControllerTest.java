@@ -9,10 +9,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.shuttleverse.community.api.ApiResponse;
+import com.shuttleverse.community.dto.CoachCreationData;
 import com.shuttleverse.community.dto.CoachPriceResponse;
 import com.shuttleverse.community.dto.CoachResponse;
 import com.shuttleverse.community.dto.CoachScheduleResponse;
-import com.shuttleverse.community.dto.CoachCreationData;
 import com.shuttleverse.community.mapper.MapStructMapper;
 import com.shuttleverse.community.model.Coach;
 import com.shuttleverse.community.model.CoachPrice;
@@ -131,7 +131,8 @@ class CoachControllerTest {
     when(coachService.createCoach(any(Coach.class), any(User.class))).thenReturn(coach);
     when(mapper.toCoachResponse(any(Coach.class))).thenReturn(coachResponse);
 
-    ResponseEntity<ApiResponse<CoachResponse>> response = coachController.createCoach(coachCreationData, jwt);
+    ResponseEntity<ApiResponse<CoachResponse>> response = coachController.createCoach(
+        coachCreationData, jwt);
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
     assertEquals(coachResponse, response.getBody().getData());
@@ -213,15 +214,16 @@ class CoachControllerTest {
 
   @Test
   void upvoteSchedule_Success() {
-    when(coachService.upvoteSchedule(any(UUID.class))).thenReturn(schedule);
+    when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
+    when(coachService.upvoteSchedule(any(UUID.class), any(User.class))).thenReturn(schedule);
     when(mapper.toCoachScheduleResponse(any(CoachSchedule.class))).thenReturn(scheduleResponse);
 
     ResponseEntity<ApiResponse<CoachScheduleResponse>> response = coachController.upvoteSchedule(
-        scheduleId.toString());
+        scheduleId.toString(), jwt);
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
     assertEquals(scheduleResponse, response.getBody().getData());
-    verify(coachService).upvoteSchedule(scheduleId);
+    verify(coachService).upvoteSchedule(scheduleId, user);
   }
 
   @Test
@@ -260,14 +262,15 @@ class CoachControllerTest {
 
   @Test
   void upvotePrice_Success() {
-    when(coachService.upvotePrice(any(UUID.class))).thenReturn(price);
+    when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
+    when(coachService.upvotePrice(any(UUID.class), any(User.class))).thenReturn(price);
     when(mapper.toCoachPriceResponse(any(CoachPrice.class))).thenReturn(priceResponse);
 
     ResponseEntity<ApiResponse<CoachPriceResponse>> response = coachController.upvotePrice(
-        priceId.toString());
+        priceId.toString(), jwt);
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
     assertEquals(priceResponse, response.getBody().getData());
-    verify(coachService).upvotePrice(priceId);
+    verify(coachService).upvotePrice(priceId, user);
   }
 }

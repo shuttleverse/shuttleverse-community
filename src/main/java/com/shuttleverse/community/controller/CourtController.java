@@ -156,15 +156,25 @@ public class CourtController {
 
   @PostMapping("/schedule/{scheduleId}/upvote")
   public ResponseEntity<ApiResponse<CourtScheduleResponse>> upvoteSchedule(
-      @PathVariable String scheduleId) {
-    CourtSchedule schedule = courtService.upvoteSchedule(UUID.fromString(scheduleId));
+      @PathVariable String scheduleId,
+      @AuthenticationPrincipal Jwt jwt) {
+    String sub = jwt.getSubject();
+    User creator = userService.findBySub(sub)
+        .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+    CourtSchedule schedule = courtService.upvoteSchedule(UUID.fromString(scheduleId), creator);
     return ResponseEntity.ok(ApiResponse.success(mapper.toCourtScheduleResponse(schedule)));
   }
 
   @PostMapping("/price/{priceId}/upvote")
   public ResponseEntity<ApiResponse<CourtPriceResponse>> upvotePrice(
-      @PathVariable String priceId) {
-    CourtPrice price = courtService.upvotePrice(UUID.fromString(priceId));
+      @PathVariable String priceId,
+      @AuthenticationPrincipal Jwt jwt) {
+    String sub = jwt.getSubject();
+    User creator = userService.findBySub(sub)
+        .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+    CourtPrice price = courtService.upvotePrice(UUID.fromString(priceId), creator);
     return ResponseEntity.ok(ApiResponse.success(mapper.toCourtPriceResponse(price)));
   }
 }
