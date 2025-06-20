@@ -12,6 +12,7 @@ import com.shuttleverse.community.dto.LocationDto;
 import com.shuttleverse.community.dto.StringerCreationData;
 import com.shuttleverse.community.dto.StringerPriceResponse;
 import com.shuttleverse.community.dto.StringerResponse;
+import com.shuttleverse.community.dto.UserResponse;
 import com.shuttleverse.community.model.Coach;
 import com.shuttleverse.community.model.CoachPrice;
 import com.shuttleverse.community.model.CoachSchedule;
@@ -20,6 +21,7 @@ import com.shuttleverse.community.model.CourtPrice;
 import com.shuttleverse.community.model.CourtSchedule;
 import com.shuttleverse.community.model.Stringer;
 import com.shuttleverse.community.model.StringerPrice;
+import com.shuttleverse.community.model.User;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
@@ -52,6 +54,8 @@ public interface MapStructMapper {
         locationDto.getLatitude()
     ));
   }
+
+  UserResponse userToUserDto(User user);
 
   @Mapping(target = "locationPoint", source = "locationPoint")
   Court toCourt(CourtCreationData courtCreationData);

@@ -1,5 +1,7 @@
 package com.shuttleverse.community.service;
 
+import com.shuttleverse.community.constants.BadmintonEntityType;
+import com.shuttleverse.community.constants.BadmintonInfoType;
 import com.shuttleverse.community.model.Stringer;
 import com.shuttleverse.community.model.StringerPrice;
 import com.shuttleverse.community.model.User;
@@ -24,6 +26,7 @@ public class StringerService {
 
   private final StringerRepository stringerRepository;
   private final StringerPriceRepository priceRepository;
+  private final UpvoteService upvoteService;
 
   @Transactional
   public Stringer createStringer(Stringer stringer, User creator) {
@@ -82,12 +85,22 @@ public class StringerService {
     return priceRepository.save(price);
   }
 
-  @Transactional
   public StringerPrice upvotePrice(UUID priceId) {
     StringerPrice price = priceRepository.findById(priceId)
         .orElseThrow(() -> new EntityNotFoundException("Price not found"));
     price.setUpvotes(price.getUpvotes() + 1);
+
     return priceRepository.save(price);
+  }
+
+  @Transactional
+  public StringerPrice upvotePrice(UUID priceId, User creator) {
+    StringerPrice price = this.upvotePrice(priceId);
+
+    this.upvoteService.addUpvote(BadmintonEntityType.STRINGER, BadmintonInfoType.PRICE, priceId,
+        creator);
+
+    return price;
   }
 
   public boolean isOwner(UUID stringerId, UUID userId) {

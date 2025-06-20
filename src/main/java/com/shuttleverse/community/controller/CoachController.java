@@ -75,7 +75,6 @@ public class CoachController {
   public ResponseEntity<ApiResponse<CoachResponse>> createCoach(
       @Validated @RequestBody CoachCreationData coachCreationData,
       @AuthenticationPrincipal Jwt jwt) {
-
     String sub = jwt.getSubject();
     User creator = userService.findBySub(sub)
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
@@ -165,15 +164,25 @@ public class CoachController {
 
   @PostMapping("/price/{priceId}/upvote")
   public ResponseEntity<ApiResponse<CoachPriceResponse>> upvotePrice(
-      @PathVariable String priceId) {
-    CoachPrice price = coachService.upvotePrice(UUID.fromString(priceId));
+      @PathVariable String priceId,
+      @AuthenticationPrincipal Jwt jwt) {
+    String sub = jwt.getSubject();
+    User creator = userService.findBySub(sub)
+        .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+    CoachPrice price = coachService.upvotePrice(UUID.fromString(priceId), creator);
     return ResponseEntity.ok(ApiResponse.success(mapper.toCoachPriceResponse(price)));
   }
 
   @PostMapping("/schedule/{scheduleId}/upvote")
   public ResponseEntity<ApiResponse<CoachScheduleResponse>> upvoteSchedule(
-      @PathVariable String scheduleId) {
-    CoachSchedule schedule = coachService.upvoteSchedule(UUID.fromString(scheduleId));
+      @PathVariable String scheduleId,
+      @AuthenticationPrincipal Jwt jwt) {
+    String sub = jwt.getSubject();
+    User creator = userService.findBySub(sub)
+        .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+    CoachSchedule schedule = coachService.upvoteSchedule(UUID.fromString(scheduleId), creator);
     return ResponseEntity.ok(ApiResponse.success(mapper.toCoachScheduleResponse(schedule)));
   }
 }

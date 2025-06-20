@@ -135,8 +135,13 @@ public class StringerController {
 
   @PostMapping("/price/{priceId}/upvote")
   public ResponseEntity<ApiResponse<StringerPriceResponse>> upvotePrice(
-      @PathVariable String priceId) {
-    StringerPrice price = stringerService.upvotePrice(UUID.fromString(priceId));
+      @PathVariable String priceId,
+      @AuthenticationPrincipal Jwt jwt) {
+    String sub = jwt.getSubject();
+    User creator = userService.findBySub(sub)
+        .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+    StringerPrice price = stringerService.upvotePrice(UUID.fromString(priceId), creator);
     return ResponseEntity.ok(ApiResponse.success(mapper.toStringerPriceResponse(price)));
   }
 }

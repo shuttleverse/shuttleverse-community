@@ -131,7 +131,8 @@ class CourtControllerTest {
     when(courtService.createCourt(any(User.class), any(Court.class))).thenReturn(court);
     when(mapper.toCourtResponse(any(Court.class))).thenReturn(courtResponse);
 
-    ResponseEntity<ApiResponse<CourtResponse>> response = courtController.createCourt(courtCreationData, jwt);
+    ResponseEntity<ApiResponse<CourtResponse>> response = courtController.createCourt(
+        courtCreationData, jwt);
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
     assertEquals(courtResponse, response.getBody().getData());
@@ -213,15 +214,16 @@ class CourtControllerTest {
 
   @Test
   void upvoteSchedule_Success() {
-    when(courtService.upvoteSchedule(any(UUID.class))).thenReturn(schedule);
+    when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
+    when(courtService.upvoteSchedule(any(UUID.class), any(User.class))).thenReturn(schedule);
     when(mapper.toCourtScheduleResponse(any(CourtSchedule.class))).thenReturn(scheduleResponse);
 
     ResponseEntity<ApiResponse<CourtScheduleResponse>> response = courtController.upvoteSchedule(
-        scheduleId.toString());
+        scheduleId.toString(), jwt);
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
     assertEquals(scheduleResponse, response.getBody().getData());
-    verify(courtService).upvoteSchedule(scheduleId);
+    verify(courtService).upvoteSchedule(scheduleId, user);
   }
 
   @Test
@@ -244,14 +246,15 @@ class CourtControllerTest {
 
   @Test
   void upvotePrice_Success() {
-    when(courtService.upvotePrice(any(UUID.class))).thenReturn(price);
+    when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
+    when(courtService.upvotePrice(any(UUID.class), any(User.class))).thenReturn(price);
     when(mapper.toCourtPriceResponse(any(CourtPrice.class))).thenReturn(priceResponse);
 
     ResponseEntity<ApiResponse<CourtPriceResponse>> response = courtController.upvotePrice(
-        priceId.toString());
+        priceId.toString(), jwt);
 
     assertTrue(Objects.requireNonNull(response.getBody()).isSuccess());
     assertEquals(priceResponse, response.getBody().getData());
-    verify(courtService).upvotePrice(priceId);
+    verify(courtService).upvotePrice(priceId, user);
   }
 }

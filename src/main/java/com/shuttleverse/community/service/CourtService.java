@@ -1,5 +1,7 @@
 package com.shuttleverse.community.service;
 
+import com.shuttleverse.community.constants.BadmintonEntityType;
+import com.shuttleverse.community.constants.BadmintonInfoType;
 import com.shuttleverse.community.model.Court;
 import com.shuttleverse.community.model.CourtPrice;
 import com.shuttleverse.community.model.CourtSchedule;
@@ -28,6 +30,7 @@ public class CourtService {
   private final CourtScheduleRepository scheduleRepository;
   private final CourtPriceRepository priceRepository;
   private final CourtPriceRepository courtPriceRepository;
+  private final UpvoteService upvoteService;
 
   @Transactional
   public Court createCourt(User creator, Court court) {
@@ -95,6 +98,14 @@ public class CourtService {
   }
 
   @Transactional
+  public CourtSchedule upvoteSchedule(UUID scheduleId, User creator) {
+    CourtSchedule courtSchedule = this.upvoteSchedule(scheduleId);
+    upvoteService.addUpvote(BadmintonEntityType.COURT, BadmintonInfoType.SCHEDULE, scheduleId,
+        creator);
+    return courtSchedule;
+  }
+
+  @Transactional
   public List<CourtPrice> addPrice(User creator, UUID courtId, List<CourtPrice> prices) {
     getCourt(courtId);
 
@@ -122,6 +133,16 @@ public class CourtService {
     courtPrice.setUpvotes(courtPrice.getUpvotes() + 1);
     return courtPriceRepository.save(courtPrice);
   }
+
+  @Transactional
+  public CourtPrice upvotePrice(UUID priceId, User creator) {
+    CourtPrice courtPrice = this.upvotePrice(priceId);
+
+    upvoteService.addUpvote(BadmintonEntityType.COURT, BadmintonInfoType.PRICE, priceId, creator);
+
+    return courtPrice;
+  }
+
 
   public boolean isOwner(UUID courtId, UUID userId) {
     Court court = getCourt(courtId);
