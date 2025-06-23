@@ -36,6 +36,10 @@ metadata:
   name: shuttleverse-community
   namespace: default
 spec:
+  ipFamilyPolicy: PreferDualStack
+  ipFamilies:
+    - IPv4
+    - IPv6
   selector:
     app: shuttleverse-community
   ports:
