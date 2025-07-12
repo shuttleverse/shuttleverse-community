@@ -3,8 +3,14 @@ spring:
     name: shuttleverse-community
 
   datasource:
-    url: jdbc:postgresql://127.0.0.1:54322/postgres?user=postgres&password=postgres
-
+    url: ${POSTGRESQL_PROD_URI}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      idle-timeout: 30000
+      max-lifetime: 600000
+      connection-timeout: 30000
+  
   devtools:
     restart:
       enabled: true
