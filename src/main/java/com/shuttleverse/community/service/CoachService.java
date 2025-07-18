@@ -1,9 +1,13 @@
 package com.shuttleverse.community.service;
 
+import com.shuttleverse.community.constants.BadmintonEntityType;
+import com.shuttleverse.community.constants.BadmintonInfoType;
 import com.shuttleverse.community.model.Coach;
 import com.shuttleverse.community.model.CoachPrice;
 import com.shuttleverse.community.model.CoachSchedule;
 import com.shuttleverse.community.model.User;
+import com.shuttleverse.community.params.BoundingBoxParams;
+import com.shuttleverse.community.params.WithinDistanceParams;
 import com.shuttleverse.community.repository.CoachPriceRepository;
 import com.shuttleverse.community.repository.CoachRepository;
 import com.shuttleverse.community.repository.CoachScheduleRepository;
@@ -28,6 +32,7 @@ public class CoachService {
   private final CoachScheduleRepository scheduleRepository;
   private final CoachPriceRepository priceRepository;
   private final CoachPriceRepository coachPriceRepository;
+  private final UpvoteService upvoteService;
 
   @Transactional
   public Coach createCoach(Coach coach, User creator) {
@@ -43,6 +48,15 @@ public class CoachService {
   public Page<Coach> getAllCoaches(Map<String, String> filters, Pageable pageable) {
     Specification<Coach> spec = SpecificationBuilder.buildSpecification(filters);
     return coachRepository.findAll(spec, pageable);
+  }
+
+  public Page<Coach> getCourtsByBoundingBox(BoundingBoxParams params, Pageable pageable) {
+    return coachRepository.findWithinBounds(params.getMinLon(), params.getMinLat(),
+        params.getMaxLon(), params.getMaxLat(), pageable);
+  }
+
+  public Page<Coach> getCoachesWithinDistance(WithinDistanceParams params, Pageable pageable) {
+    return coachRepository.findWithinDistance(params.getLocation(), params.getDistance(), pageable);
   }
 
   @Transactional
@@ -86,12 +100,21 @@ public class CoachService {
     return scheduleRepository.save(schedule);
   }
 
-  @Transactional
   public CoachSchedule upvoteSchedule(UUID scheduleId) {
     CoachSchedule schedule = scheduleRepository.findById(scheduleId)
         .orElseThrow(() -> new EntityNotFoundException("Schedule not found"));
     schedule.setUpvotes(schedule.getUpvotes() + 1);
     return scheduleRepository.save(schedule);
+  }
+
+  @Transactional
+  public CoachSchedule upvoteSchedule(UUID scheduleId, User creator) {
+    CoachSchedule schedule = this.upvoteSchedule(scheduleId);
+
+    upvoteService.addUpvote(BadmintonEntityType.COACH, BadmintonInfoType.SCHEDULE, scheduleId,
+        creator);
+
+    return schedule;
   }
 
   @Transactional
@@ -105,12 +128,19 @@ public class CoachService {
     return priceRepository.save(price);
   }
 
-  @Transactional
   public CoachPrice upvotePrice(UUID priceId) {
     CoachPrice coachPrice = coachPriceRepository.findById(priceId)
         .orElseThrow(() -> new EntityNotFoundException("Price not found"));
     coachPrice.setUpvotes(coachPrice.getUpvotes() + 1);
     return coachPriceRepository.save(coachPrice);
+  }
+
+  @Transactional
+  public CoachPrice upvotePrice(UUID priceId, User creator) {
+    CoachPrice coachPrice = this.upvotePrice(priceId);
+    upvoteService.addUpvote(BadmintonEntityType.COACH, BadmintonInfoType.PRICE, priceId, creator);
+
+    return coachPrice;
   }
 
   @Transactional

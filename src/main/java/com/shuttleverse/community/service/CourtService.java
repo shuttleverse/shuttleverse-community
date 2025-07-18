@@ -1,9 +1,13 @@
 package com.shuttleverse.community.service;
 
+import com.shuttleverse.community.constants.BadmintonEntityType;
+import com.shuttleverse.community.constants.BadmintonInfoType;
 import com.shuttleverse.community.model.Court;
 import com.shuttleverse.community.model.CourtPrice;
 import com.shuttleverse.community.model.CourtSchedule;
 import com.shuttleverse.community.model.User;
+import com.shuttleverse.community.params.BoundingBoxParams;
+import com.shuttleverse.community.params.WithinDistanceParams;
 import com.shuttleverse.community.repository.CourtPriceRepository;
 import com.shuttleverse.community.repository.CourtRepository;
 import com.shuttleverse.community.repository.CourtScheduleRepository;
@@ -13,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -20,6 +25,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CourtService {
@@ -28,6 +34,7 @@ public class CourtService {
   private final CourtScheduleRepository scheduleRepository;
   private final CourtPriceRepository priceRepository;
   private final CourtPriceRepository courtPriceRepository;
+  private final UpvoteService upvoteService;
 
   @Transactional
   public Court createCourt(User creator, Court court) {
@@ -38,6 +45,15 @@ public class CourtService {
   public Court getCourt(UUID id) {
     return courtRepository.findById(id)
         .orElseThrow(() -> new EntityNotFoundException("Court not found with id: " + id));
+  }
+
+  public Page<Court> getCourtsByBoundingBox(BoundingBoxParams params, Pageable pageable) {
+    return courtRepository.findWithinBounds(params.getMinLon(), params.getMinLat(),
+        params.getMaxLon(), params.getMaxLat(), pageable);
+  }
+
+  public Page<Court> getCourtsWithinDistance(WithinDistanceParams params, Pageable pageable) {
+    return courtRepository.findWithinDistance(params.getLocation(), params.getDistance(), pageable);
   }
 
   public Page<Court> getAllCourts(Map<String, String> filters, Pageable pageable) {
@@ -95,6 +111,14 @@ public class CourtService {
   }
 
   @Transactional
+  public CourtSchedule upvoteSchedule(UUID scheduleId, User creator) {
+    CourtSchedule courtSchedule = this.upvoteSchedule(scheduleId);
+    upvoteService.addUpvote(BadmintonEntityType.COURT, BadmintonInfoType.SCHEDULE, scheduleId,
+        creator);
+    return courtSchedule;
+  }
+
+  @Transactional
   public List<CourtPrice> addPrice(User creator, UUID courtId, List<CourtPrice> prices) {
     getCourt(courtId);
 
@@ -121,6 +145,15 @@ public class CourtService {
         .orElseThrow(() -> new EntityNotFoundException("Price not found"));
     courtPrice.setUpvotes(courtPrice.getUpvotes() + 1);
     return courtPriceRepository.save(courtPrice);
+  }
+
+  @Transactional
+  public CourtPrice upvotePrice(UUID priceId, User creator) {
+    CourtPrice courtPrice = this.upvotePrice(priceId);
+
+    upvoteService.addUpvote(BadmintonEntityType.COURT, BadmintonInfoType.PRICE, priceId, creator);
+
+    return courtPrice;
   }
 
   public boolean isOwner(UUID courtId, UUID userId) {

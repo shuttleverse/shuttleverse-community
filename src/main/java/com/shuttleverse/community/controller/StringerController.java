@@ -8,6 +8,8 @@ import com.shuttleverse.community.mapper.MapStructMapper;
 import com.shuttleverse.community.model.Stringer;
 import com.shuttleverse.community.model.StringerPrice;
 import com.shuttleverse.community.model.User;
+import com.shuttleverse.community.params.BoundingBoxParams;
+import com.shuttleverse.community.params.WithinDistanceParams;
 import com.shuttleverse.community.service.StringerService;
 import com.shuttleverse.community.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -27,6 +29,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -66,6 +69,37 @@ public class StringerController {
 
     Page<Stringer> stringers = stringerService.getAllStringers(filters, pageable);
     Page<StringerResponse> response = stringers.map(mapper::toStringerResponse);
+    return ResponseEntity.ok(ApiResponse.success(response));
+  }
+
+  @GetMapping("/bbox")
+  public ResponseEntity<ApiResponse<Page<StringerResponse>>> getCourtsByBoundingBox(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @ModelAttribute BoundingBoxParams params) {
+    Pageable pageable = PageRequest.of(
+        page,
+        size
+    );
+    Page<Stringer> stringers = stringerService.getCourtsByBoundingBox(params, pageable);
+    Page<StringerResponse> response = stringers.map(mapper::toStringerResponse);
+
+    return ResponseEntity.ok(ApiResponse.success(response));
+  }
+
+  @GetMapping("/within")
+  public ResponseEntity<ApiResponse<Page<StringerResponse>>> getCourtsByDistance(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @ModelAttribute WithinDistanceParams params) {
+    Pageable pageable = PageRequest.of(
+        page,
+        size
+    );
+
+    Page<Stringer> stringers = stringerService.getStringersWithinDistance(params, pageable);
+    Page<StringerResponse> response = stringers.map(mapper::toStringerResponse);
+
     return ResponseEntity.ok(ApiResponse.success(response));
   }
 
@@ -135,8 +169,13 @@ public class StringerController {
 
   @PostMapping("/price/{priceId}/upvote")
   public ResponseEntity<ApiResponse<StringerPriceResponse>> upvotePrice(
-      @PathVariable String priceId) {
-    StringerPrice price = stringerService.upvotePrice(UUID.fromString(priceId));
+      @PathVariable String priceId,
+      @AuthenticationPrincipal Jwt jwt) {
+    String sub = jwt.getSubject();
+    User creator = userService.findBySub(sub)
+        .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+    StringerPrice price = stringerService.upvotePrice(UUID.fromString(priceId), creator);
     return ResponseEntity.ok(ApiResponse.success(mapper.toStringerPriceResponse(price)));
   }
 }

@@ -3,7 +3,7 @@ spring:
     name: shuttleverse-community
 
   datasource:
-    url: ${POSTGRESQL_PROD_URI}
+    url: jdbc:postgresql://127.0.0.1:54322/postgres?user=postgres&password=postgres
     hikari:
       maximum-pool-size: 5
       minimum-idle: 2

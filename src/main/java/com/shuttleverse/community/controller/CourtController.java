@@ -10,6 +10,8 @@ import com.shuttleverse.community.model.Court;
 import com.shuttleverse.community.model.CourtPrice;
 import com.shuttleverse.community.model.CourtSchedule;
 import com.shuttleverse.community.model.User;
+import com.shuttleverse.community.params.BoundingBoxParams;
+import com.shuttleverse.community.params.WithinDistanceParams;
 import com.shuttleverse.community.service.CourtService;
 import com.shuttleverse.community.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +32,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -37,6 +41,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequestMapping("/court")
 @RequiredArgsConstructor
@@ -68,6 +73,37 @@ public class CourtController {
 
     Page<Court> courts = courtService.getAllCourts(filters, pageable);
     Page<CourtResponse> response = courts.map(mapper::toCourtResponse);
+    return ResponseEntity.ok(ApiResponse.success(response));
+  }
+
+  @GetMapping("/bbox")
+  public ResponseEntity<ApiResponse<Page<CourtResponse>>> getCourtsByBoundingBox(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @ModelAttribute BoundingBoxParams params) {
+    Pageable pageable = PageRequest.of(
+        page,
+        size
+    );
+    Page<Court> courts = courtService.getCourtsByBoundingBox(params, pageable);
+    Page<CourtResponse> response = courts.map(mapper::toCourtResponse);
+
+    return ResponseEntity.ok(ApiResponse.success(response));
+  }
+
+  @GetMapping("/within")
+  public ResponseEntity<ApiResponse<Page<CourtResponse>>> getCourtsByDistance(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @ModelAttribute WithinDistanceParams params) {
+    Pageable pageable = PageRequest.of(
+        page,
+        size
+    );
+
+    Page<Court> stringers = courtService.getCourtsWithinDistance(params, pageable);
+    Page<CourtResponse> response = stringers.map(mapper::toCourtResponse);
+
     return ResponseEntity.ok(ApiResponse.success(response));
   }
 
@@ -156,15 +192,25 @@ public class CourtController {
 
   @PostMapping("/schedule/{scheduleId}/upvote")
   public ResponseEntity<ApiResponse<CourtScheduleResponse>> upvoteSchedule(
-      @PathVariable String scheduleId) {
-    CourtSchedule schedule = courtService.upvoteSchedule(UUID.fromString(scheduleId));
+      @PathVariable String scheduleId,
+      @AuthenticationPrincipal Jwt jwt) {
+    String sub = jwt.getSubject();
+    User creator = userService.findBySub(sub)
+        .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+    CourtSchedule schedule = courtService.upvoteSchedule(UUID.fromString(scheduleId), creator);
     return ResponseEntity.ok(ApiResponse.success(mapper.toCourtScheduleResponse(schedule)));
   }
 
   @PostMapping("/price/{priceId}/upvote")
   public ResponseEntity<ApiResponse<CourtPriceResponse>> upvotePrice(
-      @PathVariable String priceId) {
-    CourtPrice price = courtService.upvotePrice(UUID.fromString(priceId));
+      @PathVariable String priceId,
+      @AuthenticationPrincipal Jwt jwt) {
+    String sub = jwt.getSubject();
+    User creator = userService.findBySub(sub)
+        .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+    CourtPrice price = courtService.upvotePrice(UUID.fromString(priceId), creator);
     return ResponseEntity.ok(ApiResponse.success(mapper.toCourtPriceResponse(price)));
   }
 }
