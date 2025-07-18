@@ -6,6 +6,8 @@ import com.shuttleverse.community.model.Court;
 import com.shuttleverse.community.model.CourtPrice;
 import com.shuttleverse.community.model.CourtSchedule;
 import com.shuttleverse.community.model.User;
+import com.shuttleverse.community.params.BoundingBoxParams;
+import com.shuttleverse.community.params.WithinDistanceParams;
 import com.shuttleverse.community.repository.CourtPriceRepository;
 import com.shuttleverse.community.repository.CourtRepository;
 import com.shuttleverse.community.repository.CourtScheduleRepository;
@@ -15,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -22,6 +25,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CourtService {
@@ -41,6 +45,15 @@ public class CourtService {
   public Court getCourt(UUID id) {
     return courtRepository.findById(id)
         .orElseThrow(() -> new EntityNotFoundException("Court not found with id: " + id));
+  }
+
+  public Page<Court> getCourtsByBoundingBox(BoundingBoxParams params, Pageable pageable) {
+    return courtRepository.findWithinBounds(params.getMinLon(), params.getMinLat(),
+        params.getMaxLon(), params.getMaxLat(), pageable);
+  }
+
+  public Page<Court> getCourtsWithinDistance(WithinDistanceParams params, Pageable pageable) {
+    return courtRepository.findWithinDistance(params.getLocation(), params.getDistance(), pageable);
   }
 
   public Page<Court> getAllCourts(Map<String, String> filters, Pageable pageable) {
@@ -142,7 +155,6 @@ public class CourtService {
 
     return courtPrice;
   }
-
 
   public boolean isOwner(UUID courtId, UUID userId) {
     Court court = getCourt(courtId);

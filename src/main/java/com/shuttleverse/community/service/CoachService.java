@@ -6,6 +6,8 @@ import com.shuttleverse.community.model.Coach;
 import com.shuttleverse.community.model.CoachPrice;
 import com.shuttleverse.community.model.CoachSchedule;
 import com.shuttleverse.community.model.User;
+import com.shuttleverse.community.params.BoundingBoxParams;
+import com.shuttleverse.community.params.WithinDistanceParams;
 import com.shuttleverse.community.repository.CoachPriceRepository;
 import com.shuttleverse.community.repository.CoachRepository;
 import com.shuttleverse.community.repository.CoachScheduleRepository;
@@ -46,6 +48,15 @@ public class CoachService {
   public Page<Coach> getAllCoaches(Map<String, String> filters, Pageable pageable) {
     Specification<Coach> spec = SpecificationBuilder.buildSpecification(filters);
     return coachRepository.findAll(spec, pageable);
+  }
+
+  public Page<Coach> getCourtsByBoundingBox(BoundingBoxParams params, Pageable pageable) {
+    return coachRepository.findWithinBounds(params.getMinLon(), params.getMinLat(),
+        params.getMaxLon(), params.getMaxLat(), pageable);
+  }
+
+  public Page<Coach> getCoachesWithinDistance(WithinDistanceParams params, Pageable pageable) {
+    return coachRepository.findWithinDistance(params.getLocation(), params.getDistance(), pageable);
   }
 
   @Transactional

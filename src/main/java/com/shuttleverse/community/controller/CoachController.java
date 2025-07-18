@@ -10,6 +10,8 @@ import com.shuttleverse.community.model.Coach;
 import com.shuttleverse.community.model.CoachPrice;
 import com.shuttleverse.community.model.CoachSchedule;
 import com.shuttleverse.community.model.User;
+import com.shuttleverse.community.params.BoundingBoxParams;
+import com.shuttleverse.community.params.WithinDistanceParams;
 import com.shuttleverse.community.service.CoachService;
 import com.shuttleverse.community.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -29,6 +31,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -68,6 +71,32 @@ public class CoachController {
 
     Page<Coach> coaches = coachService.getAllCoaches(filters, pageable);
     Page<CoachResponse> response = coaches.map(mapper::toCoachResponse);
+    return ResponseEntity.ok(ApiResponse.success(response));
+  }
+
+  @GetMapping("/bbox")
+  public ResponseEntity<ApiResponse<Page<CoachResponse>>> getCoachesByBoundingBox(
+      BoundingBoxParams params,
+      Pageable pageable) {
+    Page<Coach> courts = coachService.getCourtsByBoundingBox(params, pageable);
+    Page<CoachResponse> response = courts.map(mapper::toCoachResponse);
+
+    return ResponseEntity.ok(ApiResponse.success(response));
+  }
+
+  @GetMapping("/within")
+  public ResponseEntity<ApiResponse<Page<CoachResponse>>> getCourtsByDistance(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @ModelAttribute WithinDistanceParams params) {
+    Pageable pageable = PageRequest.of(
+        page,
+        size
+    );
+
+    Page<Coach> stringers = coachService.getCoachesWithinDistance(params, pageable);
+    Page<CoachResponse> response = stringers.map(mapper::toCoachResponse);
+
     return ResponseEntity.ok(ApiResponse.success(response));
   }
 

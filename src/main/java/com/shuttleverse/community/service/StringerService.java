@@ -5,6 +5,8 @@ import com.shuttleverse.community.constants.BadmintonInfoType;
 import com.shuttleverse.community.model.Stringer;
 import com.shuttleverse.community.model.StringerPrice;
 import com.shuttleverse.community.model.User;
+import com.shuttleverse.community.params.BoundingBoxParams;
+import com.shuttleverse.community.params.WithinDistanceParams;
 import com.shuttleverse.community.repository.StringerPriceRepository;
 import com.shuttleverse.community.repository.StringerRepository;
 import com.shuttleverse.community.util.SpecificationBuilder;
@@ -42,6 +44,16 @@ public class StringerService {
   public Page<Stringer> getAllStringers(Map<String, String> filters, Pageable pageable) {
     Specification<Stringer> spec = SpecificationBuilder.buildSpecification(filters);
     return stringerRepository.findAll(spec, pageable);
+  }
+
+  public Page<Stringer> getCourtsByBoundingBox(BoundingBoxParams params, Pageable pageable) {
+    return stringerRepository.findWithinBounds(params.getMinLon(), params.getMinLat(),
+        params.getMaxLon(), params.getMaxLat(), pageable);
+  }
+
+  public Page<Stringer> getStringersWithinDistance(WithinDistanceParams params, Pageable pageable) {
+    return stringerRepository.findWithinDistance(params.getLocation(), params.getDistance(),
+        pageable);
   }
 
   @Transactional
