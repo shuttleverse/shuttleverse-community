@@ -129,7 +129,6 @@ public class CourtController {
   }
 
   @PutMapping("/{id}")
-  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<CourtResponse>> updateCourt(
       @PathVariable String id,
       @Validated @RequestBody Court court) {
@@ -138,14 +137,12 @@ public class CourtController {
   }
 
   @DeleteMapping("/{id}")
-  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<Void>> deleteCourt(@PathVariable String id) {
     courtService.deleteCourt(UUID.fromString(id));
     return ResponseEntity.ok(ApiResponse.success(null));
   }
 
   @PostMapping("/{id}/schedule")
-  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<List<CourtScheduleResponse>>> addSchedule(
       @PathVariable String id,
       @Validated @RequestBody List<CourtSchedule> schedule,
@@ -162,7 +159,6 @@ public class CourtController {
   }
 
   @PostMapping("/{id}/price")
-  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<List<CourtPriceResponse>>> addPrice(
       @PathVariable String id,
       @Validated @RequestBody List<CourtPrice> prices,
@@ -179,7 +175,7 @@ public class CourtController {
   }
 
   @PutMapping("/{id}/schedule/{scheduleId}")
-  @PreAuthorize("@courtService.isOwner(#id, authentication.principal)")
+  @PreAuthorize("@courtService.isSessionUserOwner(#id)")
   public ResponseEntity<ApiResponse<CourtScheduleResponse>> updateSchedule(
       @PathVariable String id,
       @PathVariable String scheduleId,

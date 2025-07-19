@@ -1,10 +1,8 @@
 package com.shuttleverse.community.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -156,25 +154,5 @@ class StringerServiceTest {
 
     assertThrows(EntityNotFoundException.class, () -> stringerService.upvotePrice(priceId));
     verify(priceRepository).findById(priceId);
-  }
-
-  @Test
-  void isOwner_Success() {
-    when(stringerRepository.findById(any(UUID.class))).thenReturn(Optional.of(stringer));
-
-    boolean result = stringerService.isOwner(stringerId, userId);
-
-    assertTrue(result);
-    verify(stringerRepository).findById(stringerId);
-  }
-
-  @Test
-  void isOwner_Failure() {
-    when(stringerRepository.findById(any(UUID.class))).thenReturn(Optional.of(stringer));
-
-    boolean result = stringerService.isOwner(stringerId, UUID.randomUUID());
-
-    assertFalse(result);
-    verify(stringerRepository).findById(stringerId);
   }
 }

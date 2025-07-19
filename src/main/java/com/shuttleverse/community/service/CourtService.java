@@ -11,6 +11,7 @@ import com.shuttleverse.community.params.WithinDistanceParams;
 import com.shuttleverse.community.repository.CourtPriceRepository;
 import com.shuttleverse.community.repository.CourtRepository;
 import com.shuttleverse.community.repository.CourtScheduleRepository;
+import com.shuttleverse.community.util.AuthenticationUtils;
 import com.shuttleverse.community.util.SpecificationBuilder;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
@@ -63,7 +64,7 @@ public class CourtService {
 
   @Transactional
   public Court updateCourt(UUID id, Court court) {
-    if (!isOwner(id, court.getOwner().getId())) {
+    if (isOwner(id, court.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can update court information");
     }
     court.setId(id);
@@ -73,7 +74,7 @@ public class CourtService {
   @Transactional
   public void deleteCourt(UUID id) {
     Court court = getCourt(id);
-    if (!isOwner(id, court.getOwner().getId())) {
+    if (isOwner(id, court.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can delete the court");
     }
     courtRepository.delete(court);
@@ -94,7 +95,7 @@ public class CourtService {
   @Transactional
   public CourtSchedule updateSchedule(UUID courtId, UUID scheduleId, CourtSchedule schedule) {
     Court court = getCourt(courtId);
-    if (!isOwner(courtId, court.getOwner().getId())) {
+    if (isOwner(courtId, court.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can update schedule");
     }
     schedule.setId(scheduleId);
@@ -131,7 +132,7 @@ public class CourtService {
 
   @Transactional
   public CourtPrice updatePrice(UUID courtId, UUID priceId, CourtPrice price) {
-    if (!isOwner(courtId, price.getSubmittedBy().getId())) {
+    if (isOwner(courtId, price.getSubmittedBy().getId())) {
       throw new AccessDeniedException("Only the owner can update price");
     }
     price.setId(priceId);
@@ -156,8 +157,15 @@ public class CourtService {
     return courtPrice;
   }
 
-  public boolean isOwner(UUID courtId, UUID userId) {
+  public boolean isSessionUserOwner(String courtId) {
+    UUID courtUuid = UUID.fromString(courtId);
+    Court court = getCourt(courtUuid);
+    UUID userId = AuthenticationUtils.getCurrentUser().getId();
+    return court.getOwner().getId().equals(userId);
+  }
+
+  private boolean isOwner(UUID courtId, UUID userId) {
     Court court = getCourt(courtId);
-    return court.getOwner() != null && court.getOwner().getId().equals(userId);
+    return court.getOwner().getId().equals(userId);
   }
 }
