@@ -49,6 +49,12 @@ public class CoachController {
   private final UserService userService;
   private final MapStructMapper mapper;
 
+  @GetMapping("/{id}")
+  public ResponseEntity<ApiResponse<CoachResponse>> getCoach(@PathVariable String id) {
+    Coach coach = coachService.getCoach(UUID.fromString(id));
+    return ResponseEntity.ok(ApiResponse.success(mapper.toCoachResponse(coach)));
+  }
+
   @GetMapping
   public ResponseEntity<ApiResponse<Page<CoachResponse>>> getAllCoaches(
       @RequestParam(defaultValue = "0") int page,
@@ -113,14 +119,8 @@ public class CoachController {
     return ResponseEntity.ok(ApiResponse.success(mapper.toCoachResponse(createdCoach)));
   }
 
-  @GetMapping("/{id}")
-  public ResponseEntity<ApiResponse<CoachResponse>> getCoach(@PathVariable String id) {
-    Coach coach = coachService.getCoach(UUID.fromString(id));
-    return ResponseEntity.ok(ApiResponse.success(mapper.toCoachResponse(coach)));
-  }
-
   @PutMapping("/{id}")
-  @PreAuthorize("isAuthenticated()")
+  @PreAuthorize("@coachService.isSessionUserOwner(#id)")
   public ResponseEntity<ApiResponse<CoachResponse>> updateCoach(
       @PathVariable String id,
       @Validated @RequestBody Coach coach) {
@@ -129,14 +129,13 @@ public class CoachController {
   }
 
   @DeleteMapping("/{id}")
-  @PreAuthorize("isAuthenticated()")
+  @PreAuthorize("@coachService.isSessionUserOwner(#id)")
   public ResponseEntity<ApiResponse<Void>> deleteCoach(@PathVariable String id) {
     coachService.deleteCoach(UUID.fromString(id));
     return ResponseEntity.ok(ApiResponse.success(null));
   }
 
   @PostMapping("/{id}/schedule")
-  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<List<CoachScheduleResponse>>> addSchedule(
       @PathVariable String id,
       @Validated @RequestBody List<CoachSchedule> schedules, @AuthenticationPrincipal Jwt jwt) {
@@ -153,7 +152,7 @@ public class CoachController {
   }
 
   @PutMapping("/{id}/schedule/{scheduleId}")
-  @PreAuthorize("isAuthenticated()")
+  @PreAuthorize("@coachService.isSessionUserOwner(#id)")
   public ResponseEntity<ApiResponse<CoachScheduleResponse>> updateSchedule(
       @PathVariable String id,
       @PathVariable String scheduleId,
@@ -165,7 +164,6 @@ public class CoachController {
   }
 
   @PostMapping("/{id}/price")
-  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<List<CoachPriceResponse>>> addPrice(
       @PathVariable String id,
       @Validated @RequestBody List<CoachPrice> prices,
@@ -181,7 +179,6 @@ public class CoachController {
   }
 
   @PutMapping("/{id}/price/{priceId}")
-  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<CoachPriceResponse>> updatePrice(
       @PathVariable String id,
       @PathVariable String priceId,
@@ -192,6 +189,7 @@ public class CoachController {
   }
 
   @PostMapping("/price/{priceId}/upvote")
+  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<CoachPriceResponse>> upvotePrice(
       @PathVariable String priceId,
       @AuthenticationPrincipal Jwt jwt) {
@@ -204,6 +202,7 @@ public class CoachController {
   }
 
   @PostMapping("/schedule/{scheduleId}/upvote")
+  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<CoachScheduleResponse>> upvoteSchedule(
       @PathVariable String scheduleId,
       @AuthenticationPrincipal Jwt jwt) {

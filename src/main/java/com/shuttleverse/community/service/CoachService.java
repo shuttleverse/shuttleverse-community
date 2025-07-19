@@ -11,6 +11,7 @@ import com.shuttleverse.community.params.WithinDistanceParams;
 import com.shuttleverse.community.repository.CoachPriceRepository;
 import com.shuttleverse.community.repository.CoachRepository;
 import com.shuttleverse.community.repository.CoachScheduleRepository;
+import com.shuttleverse.community.util.AuthenticationUtils;
 import com.shuttleverse.community.util.SpecificationBuilder;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
@@ -61,7 +62,7 @@ public class CoachService {
 
   @Transactional
   public Coach updateCoach(UUID id, Coach coach) {
-    if (!isOwner(id, coach.getOwner().getId())) {
+    if (isOwner(id, coach.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can update coach information");
     }
     coach.setId(id);
@@ -71,7 +72,7 @@ public class CoachService {
   @Transactional
   public void deleteCoach(UUID id) {
     Coach coach = getCoach(id);
-    if (!isOwner(id, coach.getOwner().getId())) {
+    if (isOwner(id, coach.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can delete the coach");
     }
     coachRepository.delete(coach);
@@ -92,7 +93,7 @@ public class CoachService {
   @Transactional
   public CoachSchedule updateSchedule(UUID coachId, UUID scheduleId, CoachSchedule schedule) {
     Coach coach = getCoach(coachId);
-    if (!isOwner(coachId, coach.getOwner().getId())) {
+    if (isOwner(coachId, coach.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can update schedule");
     }
     schedule.setId(scheduleId);
@@ -120,7 +121,7 @@ public class CoachService {
   @Transactional
   public CoachPrice updatePrice(UUID coachId, UUID priceId, CoachPrice price) {
     Coach coach = getCoach(coachId);
-    if (!isOwner(coachId, coach.getOwner().getId())) {
+    if (isOwner(coachId, coach.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can update price");
     }
     price.setId(priceId);
@@ -152,8 +153,15 @@ public class CoachService {
     return priceRepository.saveAll(prices);
   }
 
-  public boolean isOwner(UUID coachId, UUID userId) {
+  public boolean isSessionUserOwner(String coachId) {
+    UUID coachUuid = UUID.fromString(coachId);
+    Coach coach = getCoach(coachUuid);
+    UUID userId = AuthenticationUtils.getCurrentUser().getId();
+    return coach.getOwner().getId().equals(userId);
+  }
+
+  private boolean isOwner(UUID coachId, UUID userId) {
     Coach coach = getCoach(coachId);
-    return coach.getOwner() != null && coach.getOwner().getId().equals(userId);
+    return coach.getOwner().getId().equals(userId);
   }
 }

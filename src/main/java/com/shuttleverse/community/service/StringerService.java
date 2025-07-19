@@ -9,6 +9,7 @@ import com.shuttleverse.community.params.BoundingBoxParams;
 import com.shuttleverse.community.params.WithinDistanceParams;
 import com.shuttleverse.community.repository.StringerPriceRepository;
 import com.shuttleverse.community.repository.StringerRepository;
+import com.shuttleverse.community.util.AuthenticationUtils;
 import com.shuttleverse.community.util.SpecificationBuilder;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
@@ -58,7 +59,7 @@ public class StringerService {
 
   @Transactional
   public Stringer updateStringer(UUID id, Stringer stringer) {
-    if (!isOwner(id, stringer.getOwner().getId())) {
+    if (isOwner(id, stringer.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can update stringer information");
     }
     stringer.setId(id);
@@ -68,7 +69,7 @@ public class StringerService {
   @Transactional
   public void deleteStringer(UUID id) {
     Stringer stringer = getStringer(id);
-    if (!isOwner(id, stringer.getOwner().getId())) {
+    if (isOwner(id, stringer.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can delete the stringer");
     }
     stringerRepository.delete(stringer);
@@ -87,9 +88,7 @@ public class StringerService {
 
   @Transactional
   public StringerPrice updatePrice(UUID stringerId, UUID priceId, StringerPrice price) {
-    getStringer(stringerId);
-
-    if (!isOwner(stringerId, price.getSubmittedBy().getId())) {
+    if (isOwner(stringerId, price.getSubmittedBy().getId())) {
       throw new AccessDeniedException("Only the owner can update price");
     }
     price.setId(priceId);
@@ -115,8 +114,16 @@ public class StringerService {
     return price;
   }
 
-  public boolean isOwner(UUID stringerId, UUID userId) {
-    Stringer stringer = getStringer(stringerId);
-    return stringer.getOwner() != null && stringer.getOwner().getId().equals(userId);
+  public boolean isSessionUserOwner(String stringerId) {
+    UUID stringerUuid = UUID.fromString(stringerId);
+    Stringer stringer = getStringer(stringerUuid);
+    UUID userId = AuthenticationUtils.getCurrentUser().getId();
+    return stringer.getOwner().getId().equals(userId);
   }
+
+  private boolean isOwner(UUID stringerId, UUID userId) {
+    Stringer stringer = getStringer(stringerId);
+    return stringer.getOwner().getId().equals(userId);
+  }
+
 }

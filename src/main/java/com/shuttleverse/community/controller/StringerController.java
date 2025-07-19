@@ -12,6 +12,7 @@ import com.shuttleverse.community.params.BoundingBoxParams;
 import com.shuttleverse.community.params.WithinDistanceParams;
 import com.shuttleverse.community.service.StringerService;
 import com.shuttleverse.community.service.UserService;
+import com.shuttleverse.community.util.AuthenticationUtils;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +47,12 @@ public class StringerController {
   private final StringerService stringerService;
   private final UserService userService;
   private final MapStructMapper mapper;
+
+  @GetMapping("/{id}")
+  public ResponseEntity<ApiResponse<StringerResponse>> getStringer(@PathVariable String id) {
+    Stringer stringer = stringerService.getStringer(UUID.fromString(id));
+    return ResponseEntity.ok(ApiResponse.success(mapper.toStringerResponse(stringer)));
+  }
 
   @GetMapping
   public ResponseEntity<ApiResponse<Page<StringerResponse>>> getAllStringers(
@@ -107,24 +114,15 @@ public class StringerController {
   public ResponseEntity<ApiResponse<StringerResponse>> createStringer(
       @Validated @RequestBody StringerCreationData stringerCreationData,
       @AuthenticationPrincipal Jwt jwt) {
-
-    String sub = jwt.getSubject();
-    User creator = userService.findBySub(sub)
-        .orElseThrow(() -> new EntityNotFoundException("User not found"));
+    User creator = AuthenticationUtils.getCurrentUser();
 
     Stringer stringer = mapper.toStringer(stringerCreationData);
     Stringer createdStringer = stringerService.createStringer(stringer, creator);
     return ResponseEntity.ok(ApiResponse.success(mapper.toStringerResponse(createdStringer)));
   }
 
-  @GetMapping("/{id}")
-  public ResponseEntity<ApiResponse<StringerResponse>> getStringer(@PathVariable String id) {
-    Stringer stringer = stringerService.getStringer(UUID.fromString(id));
-    return ResponseEntity.ok(ApiResponse.success(mapper.toStringerResponse(stringer)));
-  }
-
   @PutMapping("/{id}")
-  @PreAuthorize("isAuthenticated()")
+  @PreAuthorize("@stringerService.isSessionUserOwner(#id)")
   public ResponseEntity<ApiResponse<StringerResponse>> updateStringer(
       @PathVariable String id,
       @Validated @RequestBody Stringer stringer) {
@@ -133,14 +131,13 @@ public class StringerController {
   }
 
   @DeleteMapping("/{id}")
-  @PreAuthorize("isAuthenticated()")
+  @PreAuthorize("@stringerService.isSessionUserOwner(#id)")
   public ResponseEntity<ApiResponse<Void>> deleteStringer(@PathVariable String id) {
     stringerService.deleteStringer(UUID.fromString(id));
     return ResponseEntity.ok(ApiResponse.success(null));
   }
 
   @PostMapping("/{id}/price")
-  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<List<StringerPriceResponse>>> addPrice(
       @PathVariable String id,
       @Validated @RequestBody List<StringerPrice> prices,
@@ -157,7 +154,6 @@ public class StringerController {
   }
 
   @PutMapping("/{id}/price/{priceId}")
-  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ApiResponse<StringerPriceResponse>> updatePrice(
       @PathVariable String id,
       @PathVariable String priceId,

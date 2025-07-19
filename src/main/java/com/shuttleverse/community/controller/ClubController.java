@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/club")
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "controller.club.enabled", havingValue = "true")
 public class ClubController {
 
   private final ClubService clubService;

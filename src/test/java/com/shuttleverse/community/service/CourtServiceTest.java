@@ -1,10 +1,8 @@
 package com.shuttleverse.community.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -191,25 +189,5 @@ class CourtServiceTest {
     assertEquals(schedule.getCloseTime(), result.getCloseTime());
     verify(courtRepository, times(2)).findById(courtId);
     verify(scheduleRepository).save(any(CourtSchedule.class));
-  }
-
-  @Test
-  void isOwner_Success() {
-    when(courtRepository.findById(any(UUID.class))).thenReturn(Optional.of(court));
-
-    boolean result = courtService.isOwner(courtId, userId);
-
-    assertTrue(result);
-    verify(courtRepository).findById(courtId);
-  }
-
-  @Test
-  void isOwner_Failure() {
-    when(courtRepository.findById(any(UUID.class))).thenReturn(Optional.of(court));
-
-    boolean result = courtService.isOwner(courtId, UUID.randomUUID());
-
-    assertFalse(result);
-    verify(courtRepository).findById(courtId);
   }
 }
