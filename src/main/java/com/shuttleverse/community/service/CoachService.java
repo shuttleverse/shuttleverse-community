@@ -11,6 +11,7 @@ import com.shuttleverse.community.params.WithinDistanceParams;
 import com.shuttleverse.community.repository.CoachPriceRepository;
 import com.shuttleverse.community.repository.CoachRepository;
 import com.shuttleverse.community.repository.CoachScheduleRepository;
+import com.shuttleverse.community.util.AuthenticationUtils;
 import com.shuttleverse.community.util.SpecificationBuilder;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
@@ -152,8 +153,15 @@ public class CoachService {
     return priceRepository.saveAll(prices);
   }
 
-  public boolean isOwner(UUID coachId, UUID userId) {
+  public boolean isSessionUserOwner(String coachId) {
+    UUID coachUuid = UUID.fromString(coachId);
+    Coach coach = getCoach(coachUuid);
+    UUID userId = AuthenticationUtils.getCurrentUser().getId();
+    return coach.getOwner().getId().equals(userId);
+  }
+
+  private boolean isOwner(UUID coachId, UUID userId) {
     Coach coach = getCoach(coachId);
-    return coach.getOwner() != null && coach.getOwner().getId().equals(userId);
+    return coach.getOwner().getId().equals(userId);
   }
 }

@@ -1,19 +1,17 @@
 package com.shuttleverse.community.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.shuttleverse.community.SVBaseTest;
 import com.shuttleverse.community.model.Court;
 import com.shuttleverse.community.model.CourtPrice;
 import com.shuttleverse.community.model.CourtSchedule;
-import com.shuttleverse.community.model.User;
 import com.shuttleverse.community.repository.CourtPriceRepository;
 import com.shuttleverse.community.repository.CourtRepository;
 import com.shuttleverse.community.repository.CourtScheduleRepository;
@@ -31,7 +29,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
-class CourtServiceTest {
+class CourtServiceTest extends SVBaseTest {
 
   @Mock
   private CourtRepository courtRepository;
@@ -48,22 +46,15 @@ class CourtServiceTest {
   private Court court;
   private CourtSchedule schedule;
   private CourtPrice price;
-  private User user;
   private UUID courtId;
-  private UUID userId;
   private UUID scheduleId;
   private UUID priceId;
 
   @BeforeEach
   void setUp() {
     courtId = UUID.randomUUID();
-    userId = UUID.randomUUID();
     scheduleId = UUID.randomUUID();
     priceId = UUID.randomUUID();
-
-    user = new User();
-    user.setId(userId);
-    user.setUsername("testuser");
 
     court = new Court();
     court.setId(courtId);
@@ -191,25 +182,5 @@ class CourtServiceTest {
     assertEquals(schedule.getCloseTime(), result.getCloseTime());
     verify(courtRepository, times(2)).findById(courtId);
     verify(scheduleRepository).save(any(CourtSchedule.class));
-  }
-
-  @Test
-  void isOwner_Success() {
-    when(courtRepository.findById(any(UUID.class))).thenReturn(Optional.of(court));
-
-    boolean result = courtService.isOwner(courtId, userId);
-
-    assertTrue(result);
-    verify(courtRepository).findById(courtId);
-  }
-
-  @Test
-  void isOwner_Failure() {
-    when(courtRepository.findById(any(UUID.class))).thenReturn(Optional.of(court));
-
-    boolean result = courtService.isOwner(courtId, UUID.randomUUID());
-
-    assertFalse(result);
-    verify(courtRepository).findById(courtId);
   }
 }

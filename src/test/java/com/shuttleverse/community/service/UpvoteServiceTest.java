@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.shuttleverse.community.SVBaseTest;
 import com.shuttleverse.community.constants.BadmintonEntityType;
 import com.shuttleverse.community.constants.BadmintonInfoType;
 import com.shuttleverse.community.dto.CourtResponse;
@@ -17,7 +18,6 @@ import com.shuttleverse.community.dto.UserResponse;
 import com.shuttleverse.community.mapper.MapStructMapper;
 import com.shuttleverse.community.model.Court;
 import com.shuttleverse.community.model.Upvote;
-import com.shuttleverse.community.model.User;
 import com.shuttleverse.community.repository.CoachPriceRepository;
 import com.shuttleverse.community.repository.CoachScheduleRepository;
 import com.shuttleverse.community.repository.CourtPriceRepository;
@@ -46,7 +46,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
-class UpvoteServiceTest {
+class UpvoteServiceTest extends SVBaseTest {
 
   @Mock
   private UpvoteRepository upvoteRepository;
@@ -72,31 +72,24 @@ class UpvoteServiceTest {
   @InjectMocks
   private UpvoteService upvoteService;
 
-  private User testUser;
   private Upvote testUpvote;
   private Court testCourt;
   private CourtResponse testCourtResponse;
   private UserResponse testUserResponse;
   private UUID upvoteId;
-  private UUID userId;
   private UUID entityId;
 
   @BeforeEach
   void setUp() {
     upvoteId = UUID.randomUUID();
-    userId = UUID.randomUUID();
     entityId = UUID.randomUUID();
-
-    testUser = new User();
-    testUser.setId(userId);
-    testUser.setUsername("testuser");
 
     testUpvote = new Upvote();
     testUpvote.setUpvoteId(upvoteId);
     testUpvote.setEntityType(BadmintonEntityType.COURT);
     testUpvote.setInfoType(BadmintonInfoType.SCHEDULE);
     testUpvote.setEntityId(entityId);
-    testUpvote.setUpvoteCreator(testUser);
+    testUpvote.setUpvoteCreator(user);
     testUpvote.setCreatedAt(ZonedDateTime.now());
 
     testCourt = new Court();
@@ -104,8 +97,8 @@ class UpvoteServiceTest {
     testCourt.setName("Test Court");
 
     testUserResponse = new UserResponse();
-    testUserResponse.setId(userId);
-    testUserResponse.setUsername("testuser");
+    testUserResponse.setId(user.getId());
+    testUserResponse.setUsername(user.getUsername());
 
     testCourtResponse = new CourtResponse();
     testCourtResponse.setId(entityId);
@@ -114,10 +107,12 @@ class UpvoteServiceTest {
 
   @Test
   void addUpvote_Success() {
-    when(upvoteRepository.findByUpvoteCreatorAndEntityId(testUser, entityId)).thenReturn(Optional.empty());
+    when(upvoteRepository.findByUpvoteCreatorAndEntityId(user, entityId)).thenReturn(
+        Optional.empty());
     when(upvoteRepository.save(any(Upvote.class))).thenReturn(testUpvote);
 
-    upvoteService.addUpvote(BadmintonEntityType.COURT, BadmintonInfoType.SCHEDULE, entityId, testUser);
+    upvoteService.addUpvote(BadmintonEntityType.COURT, BadmintonInfoType.SCHEDULE, entityId,
+        user);
 
     ArgumentCaptor<Upvote> upvoteCaptor = ArgumentCaptor.forClass(Upvote.class);
     verify(upvoteRepository).save(upvoteCaptor.capture());
@@ -126,30 +121,33 @@ class UpvoteServiceTest {
     assertEquals(BadmintonEntityType.COURT, savedUpvote.getEntityType());
     assertEquals(BadmintonInfoType.SCHEDULE, savedUpvote.getInfoType());
     assertEquals(entityId, savedUpvote.getEntityId());
-    assertEquals(testUser, savedUpvote.getUpvoteCreator());
-    verify(upvoteRepository).findByUpvoteCreatorAndEntityId(testUser, entityId);
+    assertEquals(user, savedUpvote.getUpvoteCreator());
+    verify(upvoteRepository).findByUpvoteCreatorAndEntityId(user, entityId);
   }
 
   @Test
   void addUpvote_AlreadyExists_ThrowsException() {
-    when(upvoteRepository.findByUpvoteCreatorAndEntityId(testUser, entityId)).thenReturn(Optional.of(testUpvote));
+    when(upvoteRepository.findByUpvoteCreatorAndEntityId(user, entityId)).thenReturn(
+        Optional.of(testUpvote));
 
     assertThrows(IllegalStateException.class,
-        () -> upvoteService.addUpvote(BadmintonEntityType.COURT, BadmintonInfoType.SCHEDULE, entityId, testUser));
-    verify(upvoteRepository).findByUpvoteCreatorAndEntityId(testUser, entityId);
+        () -> upvoteService.addUpvote(BadmintonEntityType.COURT, BadmintonInfoType.SCHEDULE,
+            entityId, user));
+    verify(upvoteRepository).findByUpvoteCreatorAndEntityId(user, entityId);
     verify(upvoteRepository, times(0)).save(any(Upvote.class));
   }
 
   @Test
   void addUpvote_WithDifferentEntityTypes() {
-    BadmintonEntityType[] entityTypes = { BadmintonEntityType.COURT, BadmintonEntityType.STRINGER,
-        BadmintonEntityType.COACH };
+    BadmintonEntityType[] entityTypes = {BadmintonEntityType.COURT, BadmintonEntityType.STRINGER,
+        BadmintonEntityType.COACH};
 
     for (BadmintonEntityType entityType : entityTypes) {
-      when(upvoteRepository.findByUpvoteCreatorAndEntityId(testUser, entityId)).thenReturn(Optional.empty());
+      when(upvoteRepository.findByUpvoteCreatorAndEntityId(user, entityId)).thenReturn(
+          Optional.empty());
       when(upvoteRepository.save(any(Upvote.class))).thenReturn(testUpvote);
 
-      upvoteService.addUpvote(entityType, BadmintonInfoType.SCHEDULE, entityId, testUser);
+      upvoteService.addUpvote(entityType, BadmintonInfoType.SCHEDULE, entityId, user);
 
       ArgumentCaptor<Upvote> upvoteCaptor = ArgumentCaptor.forClass(Upvote.class);
       verify(upvoteRepository).save(upvoteCaptor.capture());
@@ -158,7 +156,7 @@ class UpvoteServiceTest {
       assertEquals(entityType, savedUpvote.getEntityType());
       assertEquals(BadmintonInfoType.SCHEDULE, savedUpvote.getInfoType());
       assertEquals(entityId, savedUpvote.getEntityId());
-      assertEquals(testUser, savedUpvote.getUpvoteCreator());
+      assertEquals(user, savedUpvote.getUpvoteCreator());
 
       org.mockito.Mockito.clearInvocations(upvoteRepository);
     }
@@ -169,13 +167,13 @@ class UpvoteServiceTest {
     Map<String, String> filters = new HashMap<>();
     filters.put("entityType", "COURT");
     filters.put("infoType", "SCHEDULE");
-    filters.put("userId", userId.toString());
+    filters.put("userId", user.getId().toString());
 
     Pageable pageable = PageRequest.of(0, 10);
     Page<Upvote> upvotePage = new PageImpl<>(List.of(testUpvote));
 
     when(upvoteRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(upvotePage);
-    when(mapper.userToUserDto(testUser)).thenReturn(testUserResponse);
+    when(mapper.userToUserDto(user)).thenReturn(testUserResponse);
     when(courtScheduleRepository.findById(entityId)).thenReturn(Optional.empty());
 
     Page<UpvoteResponse> result = upvoteService.getAllUpvotes(filters, pageable);
@@ -184,7 +182,7 @@ class UpvoteServiceTest {
     assertEquals(1, result.getContent().size());
 
     verify(upvoteRepository).findAll(any(Specification.class), eq(pageable));
-    verify(mapper).userToUserDto(testUser);
+    verify(mapper).userToUserDto(user);
     verify(courtScheduleRepository).findById(entityId);
   }
 
@@ -193,21 +191,21 @@ class UpvoteServiceTest {
     Map<String, String> filters = new HashMap<>();
     filters.put("entityType", "STRINGER");
     filters.put("infoType", "PRICE");
-    filters.put("userId", userId.toString());
+    filters.put("userId", user.getId().toString());
 
     Upvote stringerUpvote = new Upvote();
     stringerUpvote.setUpvoteId(upvoteId);
     stringerUpvote.setEntityType(BadmintonEntityType.STRINGER);
     stringerUpvote.setInfoType(BadmintonInfoType.PRICE);
     stringerUpvote.setEntityId(entityId);
-    stringerUpvote.setUpvoteCreator(testUser);
+    stringerUpvote.setUpvoteCreator(user);
     stringerUpvote.setCreatedAt(ZonedDateTime.now());
 
     Pageable pageable = PageRequest.of(0, 10);
     Page<Upvote> upvotePage = new PageImpl<>(List.of(stringerUpvote));
 
     when(upvoteRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(upvotePage);
-    when(mapper.userToUserDto(testUser)).thenReturn(testUserResponse);
+    when(mapper.userToUserDto(user)).thenReturn(testUserResponse);
     when(stringerPriceRepository.findById(entityId)).thenReturn(Optional.empty());
 
     Page<UpvoteResponse> result = upvoteService.getAllUpvotes(filters, pageable);
@@ -223,21 +221,21 @@ class UpvoteServiceTest {
     Map<String, String> filters = new HashMap<>();
     filters.put("entityType", "COACH");
     filters.put("infoType", "SCHEDULE");
-    filters.put("userId", userId.toString());
+    filters.put("userId", user.getId().toString());
 
     Upvote coachUpvote = new Upvote();
     coachUpvote.setUpvoteId(upvoteId);
     coachUpvote.setEntityType(BadmintonEntityType.COACH);
     coachUpvote.setInfoType(BadmintonInfoType.SCHEDULE);
     coachUpvote.setEntityId(entityId);
-    coachUpvote.setUpvoteCreator(testUser);
+    coachUpvote.setUpvoteCreator(user);
     coachUpvote.setCreatedAt(ZonedDateTime.now());
 
     Pageable pageable = PageRequest.of(0, 10);
     Page<Upvote> upvotePage = new PageImpl<>(List.of(coachUpvote));
 
     when(upvoteRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(upvotePage);
-    when(mapper.userToUserDto(testUser)).thenReturn(testUserResponse);
+    when(mapper.userToUserDto(user)).thenReturn(testUserResponse);
     when(coachScheduleRepository.findById(entityId)).thenReturn(Optional.empty());
 
     Page<UpvoteResponse> result = upvoteService.getAllUpvotes(filters, pageable);
@@ -253,7 +251,7 @@ class UpvoteServiceTest {
     Map<String, String> filters = new HashMap<>();
     filters.put("entityType", "COURT");
     filters.put("infoType", "SCHEDULE");
-    filters.put("userId", userId.toString());
+    filters.put("userId", user.getId().toString());
 
     Pageable pageable = PageRequest.of(0, 10);
     Page<Upvote> emptyPage = new PageImpl<>(List.of());
@@ -274,13 +272,13 @@ class UpvoteServiceTest {
     Map<String, String> filters = new HashMap<>();
     filters.put("entityType", "COURT");
     filters.put("infoType", "SCHEDULE");
-    filters.put("userId", userId.toString());
+    filters.put("userId", user.getId().toString());
 
     Pageable pageable = PageRequest.of(2, 5);
     Page<Upvote> upvotePage = new PageImpl<>(List.of(testUpvote), pageable, 1);
 
     when(upvoteRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(upvotePage);
-    when(mapper.userToUserDto(testUser)).thenReturn(testUserResponse);
+    when(mapper.userToUserDto(user)).thenReturn(testUserResponse);
     when(courtScheduleRepository.findById(entityId)).thenReturn(Optional.empty());
 
     Page<UpvoteResponse> result = upvoteService.getAllUpvotes(filters, pageable);
@@ -298,20 +296,20 @@ class UpvoteServiceTest {
     Map<String, String> filters = new HashMap<>();
     filters.put("entityType", "STRINGER");
     filters.put("infoType", "PRICE");
-    filters.put("userId", userId.toString());
+    filters.put("userId", user.getId().toString());
 
     Pageable pageable = PageRequest.of(0, 10);
     Page<Upvote> upvotePage = new PageImpl<>(List.of(testUpvote));
 
     when(upvoteRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(upvotePage);
-    when(mapper.userToUserDto(testUser)).thenReturn(testUserResponse);
+    when(mapper.userToUserDto(user)).thenReturn(testUserResponse);
     when(courtScheduleRepository.findById(entityId)).thenReturn(Optional.empty());
 
     upvoteService.getAllUpvotes(filters, pageable);
 
     assertEquals("STRINGER", filters.get("entityType"));
     assertEquals("PRICE", filters.get("infoType"));
-    assertEquals(userId.toString(), filters.get("userId"));
+    assertEquals(user.getId().toString(), filters.get("userId"));
 
     verify(upvoteRepository).findAll(any(Specification.class), eq(pageable));
   }
@@ -321,7 +319,7 @@ class UpvoteServiceTest {
     Map<String, String> filters = new HashMap<>();
     filters.put("entityType", "COURT");
     filters.put("infoType", "SCHEDULE");
-    filters.put("userId", userId.toString());
+    filters.put("userId", user.getId().toString());
 
     UUID upvoteId2 = UUID.randomUUID();
     Upvote upvote2 = new Upvote();
@@ -329,14 +327,14 @@ class UpvoteServiceTest {
     upvote2.setEntityType(BadmintonEntityType.COURT);
     upvote2.setInfoType(BadmintonInfoType.SCHEDULE);
     upvote2.setEntityId(entityId);
-    upvote2.setUpvoteCreator(testUser);
+    upvote2.setUpvoteCreator(user);
     upvote2.setCreatedAt(ZonedDateTime.now());
 
     Pageable pageable = PageRequest.of(0, 10);
     Page<Upvote> upvotePage = new PageImpl<>(List.of(testUpvote, upvote2));
 
     when(upvoteRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(upvotePage);
-    when(mapper.userToUserDto(testUser)).thenReturn(testUserResponse);
+    when(mapper.userToUserDto(user)).thenReturn(testUserResponse);
     when(courtScheduleRepository.findById(entityId)).thenReturn(Optional.empty());
 
     Page<UpvoteResponse> result = upvoteService.getAllUpvotes(filters, pageable);
@@ -345,7 +343,7 @@ class UpvoteServiceTest {
     assertEquals(2, result.getContent().size());
 
     verify(upvoteRepository).findAll(any(Specification.class), eq(pageable));
-    verify(mapper, times(2)).userToUserDto(testUser);
+    verify(mapper, times(2)).userToUserDto(user);
     verify(courtScheduleRepository, times(2)).findById(entityId);
   }
 }
