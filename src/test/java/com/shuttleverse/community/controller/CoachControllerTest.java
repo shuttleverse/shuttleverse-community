@@ -5,9 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.shuttleverse.community.SVBaseTest;
 import com.shuttleverse.community.api.ApiResponse;
 import com.shuttleverse.community.dto.CoachCreationData;
 import com.shuttleverse.community.dto.CoachPriceResponse;
@@ -20,15 +22,18 @@ import com.shuttleverse.community.model.CoachSchedule;
 import com.shuttleverse.community.model.User;
 import com.shuttleverse.community.service.CoachService;
 import com.shuttleverse.community.service.UserService;
+import com.shuttleverse.community.util.AuthenticationUtils;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -36,7 +41,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
-class CoachControllerTest {
+class CoachControllerTest extends SVBaseTest {
 
   @Mock
   private CoachService coachService;
@@ -53,7 +58,6 @@ class CoachControllerTest {
   private Coach coach;
   private CoachSchedule schedule;
   private CoachPrice price;
-  private User user;
   private UUID coachId;
   private UUID scheduleId;
   private UUID priceId;
@@ -66,13 +70,8 @@ class CoachControllerTest {
   @BeforeEach
   void setUp() {
     coachId = UUID.randomUUID();
-    UUID userId = UUID.randomUUID();
     scheduleId = UUID.randomUUID();
     priceId = UUID.randomUUID();
-
-    user = new User();
-    user.setId(userId);
-    user.setUsername("testuser");
 
     coach = new Coach();
     coach.setId(coachId);
@@ -122,6 +121,10 @@ class CoachControllerTest {
         .header("alg", "none")
         .claim("sub", "user-123")
         .build();
+  }
+
+  @AfterEach
+  void tearDown() {
   }
 
   @Test

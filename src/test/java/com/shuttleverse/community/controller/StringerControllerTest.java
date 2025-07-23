@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.shuttleverse.community.SVBaseTest;
 import com.shuttleverse.community.api.ApiResponse;
 import com.shuttleverse.community.dto.StringerCreationData;
 import com.shuttleverse.community.dto.StringerPriceResponse;
@@ -34,7 +35,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
-class StringerControllerTest {
+class StringerControllerTest extends SVBaseTest {
 
   @Mock
   private StringerService stringerService;
@@ -50,7 +51,6 @@ class StringerControllerTest {
 
   private Stringer stringer;
   private StringerPrice price;
-  private User user;
   private UUID stringerId;
   private UUID priceId;
   private Jwt jwt;
@@ -61,12 +61,7 @@ class StringerControllerTest {
   @BeforeEach
   void setUp() {
     stringerId = UUID.randomUUID();
-    UUID userId = UUID.randomUUID();
     priceId = UUID.randomUUID();
-
-    user = new User();
-    user.setId(userId);
-    user.setUsername("testuser");
 
     stringer = new Stringer();
     stringer.setId(stringerId);
@@ -106,7 +101,6 @@ class StringerControllerTest {
 
   @Test
   void createStringer_Success() {
-    when(userService.findBySub(any(String.class))).thenReturn(Optional.of(user));
     when(mapper.toStringer(any(StringerCreationData.class))).thenReturn(stringer);
     when(stringerService.createStringer(any(Stringer.class), any(User.class))).thenReturn(stringer);
     when(mapper.toStringerResponse(any(Stringer.class))).thenReturn(stringerResponse);

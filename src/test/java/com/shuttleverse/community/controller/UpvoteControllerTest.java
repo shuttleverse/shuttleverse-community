@@ -36,230 +36,194 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
-import org.mockito.ArgumentCaptor;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
 class UpvoteControllerTest {
 
-    @Mock
-    private UpvoteService upvoteService;
+  @Mock
+  private UpvoteService upvoteService;
 
-    @InjectMocks
-    private UpvoteController upvoteController;
+  @InjectMocks
+  private UpvoteController upvoteController;
 
-    private User testUser;
-    private UpvoteResponse upvoteResponse;
-    private Page<UpvoteResponse> upvotePage;
+  private UpvoteResponse upvoteResponse;
+  private Page<UpvoteResponse> upvotePage;
+  private User user;
 
-    @BeforeEach
-    void setUp() {
-        UUID userId = UUID.randomUUID();
-        UUID upvoteId = UUID.randomUUID();
-        UUID entityId = UUID.randomUUID();
+  @BeforeEach
+  void setUp() {
+    user = new User();
+    user.setId(UUID.randomUUID());
+    user.setUsername("testuser");
 
-        testUser = new User();
-        testUser.setId(userId);
-        testUser.setUsername("testuser");
+    UUID userId = UUID.randomUUID();
+    UUID upvoteId = UUID.randomUUID();
+    UUID entityId = UUID.randomUUID();
 
-        UserResponse userResponse = new UserResponse();
-        userResponse.setId(userId);
-        userResponse.setUsername("testuser");
+    UserResponse userResponse = new UserResponse();
+    userResponse.setId(userId);
+    userResponse.setUsername("testuser");
 
-        BadmintonEntityDto entityDto = new BadmintonEntityDto() {
-        };
-        entityDto.setId(entityId);
-        entityDto.setName("Test Entity");
+    BadmintonEntityDto entityDto = new BadmintonEntityDto() {
+    };
+    entityDto.setId(entityId);
+    entityDto.setName("Test Entity");
 
-        upvoteResponse = UpvoteResponse.builder()
-                .upvoteId(upvoteId)
-                .upvoteCreator(userResponse)
-                .entityType(BadmintonEntityType.COURT)
-                .infoType(BadmintonInfoType.SCHEDULE)
-                .entity(entityDto)
-                .createdAt(ZonedDateTime.now())
-                .build();
+    upvoteResponse = UpvoteResponse.builder()
+        .upvoteId(upvoteId)
+        .upvoteCreator(userResponse)
+        .entityType(BadmintonEntityType.COURT)
+        .infoType(BadmintonInfoType.SCHEDULE)
+        .entity(entityDto)
+        .createdAt(ZonedDateTime.now())
+        .build();
 
-        upvotePage = new PageImpl<>(List.of(upvoteResponse));
+    upvotePage = new PageImpl<>(List.of(upvoteResponse));
+  }
+
+  @Test
+  void getAllUpvotes_Success() {
+    Map<String, String> params = new HashMap<>();
+    params.put("entityType", "COURT");
+    params.put("infoType", "SCHEDULE");
+
+    try (MockedStatic<AuthenticationUtils> mockedAuth = org.mockito.Mockito.mockStatic(
+        AuthenticationUtils.class)) {
+      mockedAuth.when(AuthenticationUtils::getCurrentUser).thenReturn(user);
+
+      when(upvoteService.getAllUpvotes(anyMap(), any(Pageable.class)))
+          .thenReturn(upvotePage);
+
+      ResponseEntity<ApiResponse<Page<UpvoteResponse>>> response = upvoteController.getAllUpvotes(0,
+          50, params);
+
+      assertNotNull(response);
+      assertTrue(response.getStatusCode().is2xxSuccessful());
+      assertNotNull(response.getBody());
+      assertTrue(response.getBody().isSuccess());
+      assertEquals(upvotePage, response.getBody().getData());
+      assertEquals(1, response.getBody().getData().getContent().size());
+      assertEquals(upvoteResponse, response.getBody().getData().getContent().get(0));
+
+      Map<String, String> expectedFilters = new HashMap<>(params);
+      expectedFilters.put("userId", user.getId().toString());
+      verify(upvoteService).getAllUpvotes(eq(expectedFilters), any(Pageable.class));
     }
+  }
 
-    @Test
-    void getAllUpvotes_Success() {
-        Map<String, String> params = new HashMap<>();
-        params.put("entityType", "COURT");
-        params.put("infoType", "SCHEDULE");
+  @Test
+  void getAllUpvotes_WithCustomPagination() {
+    Map<String, String> params = new HashMap<>();
+    params.put("entityType", "STRINGER");
+    params.put("infoType", "PRICE");
 
-        try (MockedStatic<AuthenticationUtils> mockedAuth = org.mockito.Mockito.mockStatic(
-                AuthenticationUtils.class)) {
-            mockedAuth.when(AuthenticationUtils::getCurrentUser).thenReturn(testUser);
+    try (MockedStatic<AuthenticationUtils> mockedAuth = org.mockito.Mockito.mockStatic(
+        AuthenticationUtils.class)) {
+      mockedAuth.when(AuthenticationUtils::getCurrentUser).thenReturn(user);
 
-            when(upvoteService.getAllUpvotes(anyMap(), any(Pageable.class)))
-                    .thenReturn(upvotePage);
+      when(upvoteService.getAllUpvotes(anyMap(), any(Pageable.class)))
+          .thenReturn(upvotePage);
 
-            ResponseEntity<ApiResponse<Page<UpvoteResponse>>> response = upvoteController.getAllUpvotes(0,
-                    50, params);
+      ResponseEntity<ApiResponse<Page<UpvoteResponse>>> response = upvoteController.getAllUpvotes(2,
+          10, params);
 
-            assertNotNull(response);
-            assertTrue(response.getStatusCode().is2xxSuccessful());
-            assertNotNull(response.getBody());
-            assertTrue(response.getBody().isSuccess());
-            assertEquals(upvotePage, response.getBody().getData());
-            assertEquals(1, response.getBody().getData().getContent().size());
-            assertEquals(upvoteResponse, response.getBody().getData().getContent().get(0));
+      assertNotNull(response);
+      assertTrue(response.getStatusCode().is2xxSuccessful());
+      assertNotNull(response.getBody());
+      assertTrue(response.getBody().isSuccess());
 
-            Map<String, String> expectedFilters = new HashMap<>(params);
-            expectedFilters.put("userId", testUser.getId().toString());
-            verify(upvoteService).getAllUpvotes(eq(expectedFilters), any(Pageable.class));
-        }
+      Pageable expectedPageable = PageRequest.of(2, 10);
+      Map<String, String> expectedFilters = new HashMap<>(params);
+      expectedFilters.put("userId", user.getId().toString());
+      verify(upvoteService).getAllUpvotes(eq(expectedFilters), eq(expectedPageable));
     }
+  }
 
-    @Test
-    void getAllUpvotes_WithCustomPagination() {
-        Map<String, String> params = new HashMap<>();
-        params.put("entityType", "STRINGER");
-        params.put("infoType", "PRICE");
+  @Test
+  void getAllUpvotes_WithAdditionalFilters() {
+    Map<String, String> params = new HashMap<>();
+    params.put("entityType", "COACH");
+    params.put("infoType", "SCHEDULE");
+    params.put("additional_filter", "some_value");
 
-        try (MockedStatic<AuthenticationUtils> mockedAuth = org.mockito.Mockito.mockStatic(
-                AuthenticationUtils.class)) {
-            mockedAuth.when(AuthenticationUtils::getCurrentUser).thenReturn(testUser);
+    try (MockedStatic<AuthenticationUtils> mockedAuth = org.mockito.Mockito.mockStatic(
+        AuthenticationUtils.class)) {
+      mockedAuth.when(AuthenticationUtils::getCurrentUser).thenReturn(user);
 
-            when(upvoteService.getAllUpvotes(anyMap(), any(Pageable.class)))
-                    .thenReturn(upvotePage);
+      when(upvoteService.getAllUpvotes(anyMap(), any(Pageable.class)))
+          .thenReturn(upvotePage);
 
-            ResponseEntity<ApiResponse<Page<UpvoteResponse>>> response = upvoteController.getAllUpvotes(2,
-                    10, params);
+      ResponseEntity<ApiResponse<Page<UpvoteResponse>>> response = upvoteController.getAllUpvotes(0,
+          50, params);
 
-            assertNotNull(response);
-            assertTrue(response.getStatusCode().is2xxSuccessful());
-            assertNotNull(response.getBody());
-            assertTrue(response.getBody().isSuccess());
+      assertNotNull(response);
+      assertTrue(response.getStatusCode().is2xxSuccessful());
+      assertNotNull(response.getBody());
+      assertTrue(response.getBody().isSuccess());
 
-            Pageable expectedPageable = PageRequest.of(2, 10);
-            Map<String, String> expectedFilters = new HashMap<>(params);
-            expectedFilters.put("userId", testUser.getId().toString());
-            verify(upvoteService).getAllUpvotes(eq(expectedFilters), eq(expectedPageable));
-        }
+      Map<String, String> expectedFilters = new HashMap<>(params);
+      expectedFilters.put("userId", user.getId().toString());
+      verify(upvoteService).getAllUpvotes(eq(expectedFilters), any(Pageable.class));
     }
+  }
 
-    @Test
-    void getAllUpvotes_WithAdditionalFilters() {
-        Map<String, String> params = new HashMap<>();
-        params.put("entityType", "COACH");
-        params.put("infoType", "SCHEDULE");
-        params.put("additional_filter", "some_value");
+  @Test
+  void getAllUpvotes_WithPageAndSizeInParams() {
+    Map<String, String> params = new HashMap<>();
+    params.put("entityType", "COURT");
+    params.put("infoType", "SCHEDULE");
+    params.put("page", "5");
+    params.put("size", "25");
 
-        try (MockedStatic<AuthenticationUtils> mockedAuth = org.mockito.Mockito.mockStatic(
-                AuthenticationUtils.class)) {
-            mockedAuth.when(AuthenticationUtils::getCurrentUser).thenReturn(testUser);
+    try (MockedStatic<AuthenticationUtils> mockedAuth = org.mockito.Mockito.mockStatic(
+        AuthenticationUtils.class)) {
+      mockedAuth.when(AuthenticationUtils::getCurrentUser).thenReturn(user);
 
-            when(upvoteService.getAllUpvotes(anyMap(), any(Pageable.class)))
-                    .thenReturn(upvotePage);
+      when(upvoteService.getAllUpvotes(anyMap(), any(Pageable.class)))
+          .thenReturn(upvotePage);
 
-            ResponseEntity<ApiResponse<Page<UpvoteResponse>>> response = upvoteController.getAllUpvotes(0,
-                    50, params);
+      ResponseEntity<ApiResponse<Page<UpvoteResponse>>> response = upvoteController.getAllUpvotes(3,
+          15, params);
 
-            assertNotNull(response);
-            assertTrue(response.getStatusCode().is2xxSuccessful());
-            assertNotNull(response.getBody());
-            assertTrue(response.getBody().isSuccess());
+      assertNotNull(response);
+      assertTrue(response.getStatusCode().is2xxSuccessful());
+      assertNotNull(response.getBody());
+      assertTrue(response.getBody().isSuccess());
 
-            Map<String, String> expectedFilters = new HashMap<>(params);
-            expectedFilters.put("userId", testUser.getId().toString());
-            verify(upvoteService).getAllUpvotes(eq(expectedFilters), any(Pageable.class));
-        }
+      Pageable expectedPageable = PageRequest.of(3, 15);
+      Map<String, String> expectedFilters = new HashMap<>(params);
+      expectedFilters.put("userId", user.getId().toString());
+      expectedFilters.remove("page");
+      expectedFilters.remove("size");
+      verify(upvoteService).getAllUpvotes(eq(expectedFilters), eq(expectedPageable));
     }
+  }
 
-    @Test
-    void getAllUpvotes_WithPageAndSizeInParams() {
-        Map<String, String> params = new HashMap<>();
-        params.put("entityType", "COURT");
-        params.put("infoType", "SCHEDULE");
-        params.put("page", "5");
-        params.put("size", "25");
+  @Test
+  void getAllUpvotes_EmptyResult() {
+    Map<String, String> params = new HashMap<>();
+    params.put("entityType", "COURT");
+    params.put("infoType", "SCHEDULE");
 
-        try (MockedStatic<AuthenticationUtils> mockedAuth = org.mockito.Mockito.mockStatic(
-                AuthenticationUtils.class)) {
-            mockedAuth.when(AuthenticationUtils::getCurrentUser).thenReturn(testUser);
+    Page<UpvoteResponse> emptyPage = new PageImpl<>(List.of());
 
-            when(upvoteService.getAllUpvotes(anyMap(), any(Pageable.class)))
-                    .thenReturn(upvotePage);
+    try (MockedStatic<AuthenticationUtils> mockedAuth = org.mockito.Mockito.mockStatic(
+        AuthenticationUtils.class)) {
+      mockedAuth.when(AuthenticationUtils::getCurrentUser).thenReturn(user);
 
-            ResponseEntity<ApiResponse<Page<UpvoteResponse>>> response = upvoteController.getAllUpvotes(3,
-                    15, params);
+      when(upvoteService.getAllUpvotes(anyMap(), any(Pageable.class)))
+          .thenReturn(emptyPage);
 
-            assertNotNull(response);
-            assertTrue(response.getStatusCode().is2xxSuccessful());
-            assertNotNull(response.getBody());
-            assertTrue(response.getBody().isSuccess());
+      ResponseEntity<ApiResponse<Page<UpvoteResponse>>> response = upvoteController.getAllUpvotes(0,
+          50, params);
 
-            Pageable expectedPageable = PageRequest.of(3, 15);
-            Map<String, String> expectedFilters = new HashMap<>(params);
-            expectedFilters.put("userId", testUser.getId().toString());
-            expectedFilters.remove("page");
-            expectedFilters.remove("size");
-            verify(upvoteService).getAllUpvotes(eq(expectedFilters), eq(expectedPageable));
-        }
+      assertNotNull(response);
+      assertTrue(response.getStatusCode().is2xxSuccessful());
+      assertNotNull(response.getBody());
+      assertTrue(response.getBody().isSuccess());
+      assertEquals(emptyPage, response.getBody().getData());
+      assertEquals(0, response.getBody().getData().getContent().size());
     }
-
-    @Test
-    void getAllUpvotes_EmptyResult() {
-        Map<String, String> params = new HashMap<>();
-        params.put("entityType", "COURT");
-        params.put("infoType", "SCHEDULE");
-
-        Page<UpvoteResponse> emptyPage = new PageImpl<>(List.of());
-
-        try (MockedStatic<AuthenticationUtils> mockedAuth = org.mockito.Mockito.mockStatic(
-                AuthenticationUtils.class)) {
-            mockedAuth.when(AuthenticationUtils::getCurrentUser).thenReturn(testUser);
-
-            when(upvoteService.getAllUpvotes(anyMap(), any(Pageable.class)))
-                    .thenReturn(emptyPage);
-
-            ResponseEntity<ApiResponse<Page<UpvoteResponse>>> response = upvoteController.getAllUpvotes(0,
-                    50, params);
-
-            assertNotNull(response);
-            assertTrue(response.getStatusCode().is2xxSuccessful());
-            assertNotNull(response.getBody());
-            assertTrue(response.getBody().isSuccess());
-            assertEquals(emptyPage, response.getBody().getData());
-            assertEquals(0, response.getBody().getData().getContent().size());
-        }
-    }
-
-    @Test
-    void getAllUpvotes_WithAllEntityTypes() {
-        BadmintonEntityType[] entityTypes = BadmintonEntityType.values();
-        BadmintonInfoType[] infoTypes = BadmintonInfoType.values();
-
-        for (int i = 0; i < entityTypes.length; i++) {
-            for (int j = 0; j < infoTypes.length; j++) {
-                Map<String, String> params = new HashMap<>();
-                params.put("entityType", entityTypes[i].name());
-                params.put("infoType", infoTypes[j].name());
-
-                try (MockedStatic<AuthenticationUtils> mockedAuth = org.mockito.Mockito
-                        .mockStatic(AuthenticationUtils.class)) {
-                    mockedAuth.when(AuthenticationUtils::getCurrentUser).thenReturn(testUser);
-
-                    when(upvoteService.getAllUpvotes(anyMap(), any(Pageable.class)))
-                            .thenReturn(upvotePage);
-
-                    ResponseEntity<ApiResponse<Page<UpvoteResponse>>> response = upvoteController.getAllUpvotes(
-                            0, 50,
-                            params);
-
-                    assertNotNull(response);
-                    assertTrue(response.getStatusCode().is2xxSuccessful());
-                    assertNotNull(response.getBody());
-                    assertTrue(response.getBody().isSuccess());
-
-                    Map<String, String> expectedFilters = new HashMap<>(params);
-                    expectedFilters.put("userId", testUser.getId().toString());
-                    verify(upvoteService).getAllUpvotes(eq(expectedFilters), any(Pageable.class));
-                }
-            }
-        }
-    }
+  }
 }

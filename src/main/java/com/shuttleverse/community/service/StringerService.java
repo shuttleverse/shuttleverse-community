@@ -9,6 +9,7 @@ import com.shuttleverse.community.params.BoundingBoxParams;
 import com.shuttleverse.community.params.WithinDistanceParams;
 import com.shuttleverse.community.repository.StringerPriceRepository;
 import com.shuttleverse.community.repository.StringerRepository;
+import com.shuttleverse.community.util.AuthenticationUtils;
 import com.shuttleverse.community.util.SpecificationBuilder;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
@@ -87,21 +88,11 @@ public class StringerService {
 
   @Transactional
   public StringerPrice updatePrice(UUID stringerId, UUID priceId, StringerPrice price) {
-    getStringer(stringerId);
-
     if (!isOwner(stringerId, price.getSubmittedBy().getId())) {
       throw new AccessDeniedException("Only the owner can update price");
     }
     price.setId(priceId);
     price.setStringerId(stringerId);
-    return priceRepository.save(price);
-  }
-
-  public StringerPrice upvotePrice(UUID priceId) {
-    StringerPrice price = priceRepository.findById(priceId)
-        .orElseThrow(() -> new EntityNotFoundException("Price not found"));
-    price.setUpvotes(price.getUpvotes() + 1);
-
     return priceRepository.save(price);
   }
 
@@ -115,8 +106,25 @@ public class StringerService {
     return price;
   }
 
-  public boolean isOwner(UUID stringerId, UUID userId) {
-    Stringer stringer = getStringer(stringerId);
-    return stringer.getOwner() != null && stringer.getOwner().getId().equals(userId);
+  public StringerPrice upvotePrice(UUID priceId) {
+    StringerPrice price = priceRepository.findById(priceId)
+        .orElseThrow(() -> new EntityNotFoundException("Price not found"));
+    price.setUpvotes(price.getUpvotes() + 1);
+
+    return priceRepository.save(price);
   }
+
+  public boolean isSessionUserOwner(String stringerId) {
+    UUID stringerUuid = UUID.fromString(stringerId);
+    Stringer stringer = getStringer(stringerUuid);
+    UUID userId = AuthenticationUtils.getCurrentUser().getId();
+    return stringer.getOwner().getId().equals(userId);
+  }
+
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+  private boolean isOwner(UUID stringerId, UUID userId) {
+    Stringer stringer = getStringer(stringerId);
+    return stringer.getOwner().getId().equals(userId);
+  }
+
 }

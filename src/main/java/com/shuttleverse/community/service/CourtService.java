@@ -11,6 +11,7 @@ import com.shuttleverse.community.params.WithinDistanceParams;
 import com.shuttleverse.community.repository.CourtPriceRepository;
 import com.shuttleverse.community.repository.CourtRepository;
 import com.shuttleverse.community.repository.CourtScheduleRepository;
+import com.shuttleverse.community.util.AuthenticationUtils;
 import com.shuttleverse.community.util.SpecificationBuilder;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
@@ -156,8 +157,15 @@ public class CourtService {
     return courtPrice;
   }
 
-  public boolean isOwner(UUID courtId, UUID userId) {
+  public boolean isSessionUserOwner(String courtId) {
+    UUID courtUuid = UUID.fromString(courtId);
+    Court court = getCourt(courtUuid);
+    UUID userId = AuthenticationUtils.getCurrentUser().getId();
+    return court.getOwner().getId().equals(userId);
+  }
+
+  private boolean isOwner(UUID courtId, UUID userId) {
     Court court = getCourt(courtId);
-    return court.getOwner() != null && court.getOwner().getId().equals(userId);
+    return court.getOwner().getId().equals(userId);
   }
 }

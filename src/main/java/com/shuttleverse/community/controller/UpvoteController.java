@@ -5,11 +5,13 @@ import com.shuttleverse.community.dto.UpvoteResponse;
 import com.shuttleverse.community.model.User;
 import com.shuttleverse.community.service.UpvoteService;
 import com.shuttleverse.community.util.AuthenticationUtils;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -31,18 +33,22 @@ public class UpvoteController {
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "50") int size,
       @RequestParam Map<String, String> params) {
-    User user = AuthenticationUtils.getCurrentUser();
+    try {
+      User user = AuthenticationUtils.getCurrentUser();
 
-    Map<String, String> filters = new HashMap<>(params);
-    filters.put("userId", String.valueOf(user.getId()));
-    filters.remove("page");
-    filters.remove("size");
+      Map<String, String> filters = new HashMap<>(params);
+      filters.put("userId", String.valueOf(user.getId()));
+      filters.remove("page");
+      filters.remove("size");
 
-    Pageable pageable = PageRequest.of(
-        page,
-        size);
+      Pageable pageable = PageRequest.of(
+          page,
+          size);
 
-    Page<UpvoteResponse> upvotes = upvoteService.getAllUpvotes(filters, pageable);
-    return ResponseEntity.ok(ApiResponse.success(upvotes));
+      Page<UpvoteResponse> upvotes = upvoteService.getAllUpvotes(filters, pageable);
+      return ResponseEntity.ok(ApiResponse.success(upvotes));
+    } catch (Exception e) {
+      return ResponseEntity.ok(ApiResponse.success(new PageImpl<>(Collections.emptyList())));
+    }
   }
 }

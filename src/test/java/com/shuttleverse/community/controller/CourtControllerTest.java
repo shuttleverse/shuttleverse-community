@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.shuttleverse.community.SVBaseTest;
 import com.shuttleverse.community.api.ApiResponse;
 import com.shuttleverse.community.dto.CourtCreationData;
 import com.shuttleverse.community.dto.CourtPriceResponse;
@@ -36,7 +37,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
-class CourtControllerTest {
+class CourtControllerTest extends SVBaseTest {
 
   @Mock
   private CourtService courtService;
@@ -53,7 +54,6 @@ class CourtControllerTest {
   private Court court;
   private CourtSchedule schedule;
   private CourtPrice price;
-  private User user;
   private UUID courtId;
   private UUID scheduleId;
   private UUID priceId;
@@ -66,13 +66,8 @@ class CourtControllerTest {
   @BeforeEach
   void setUp() {
     courtId = UUID.randomUUID();
-    UUID userId = UUID.randomUUID();
     scheduleId = UUID.randomUUID();
     priceId = UUID.randomUUID();
-
-    user = new User();
-    user.setId(userId);
-    user.setUsername("testuser");
 
     court = new Court();
     court.setId(courtId);
