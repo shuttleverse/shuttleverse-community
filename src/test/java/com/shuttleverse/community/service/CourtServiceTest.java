@@ -8,10 +8,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.shuttleverse.community.SVBaseTest;
 import com.shuttleverse.community.model.Court;
 import com.shuttleverse.community.model.CourtPrice;
 import com.shuttleverse.community.model.CourtSchedule;
-import com.shuttleverse.community.model.User;
 import com.shuttleverse.community.repository.CourtPriceRepository;
 import com.shuttleverse.community.repository.CourtRepository;
 import com.shuttleverse.community.repository.CourtScheduleRepository;
@@ -29,7 +29,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
-class CourtServiceTest {
+class CourtServiceTest extends SVBaseTest {
 
   @Mock
   private CourtRepository courtRepository;
@@ -46,22 +46,15 @@ class CourtServiceTest {
   private Court court;
   private CourtSchedule schedule;
   private CourtPrice price;
-  private User user;
   private UUID courtId;
-  private UUID userId;
   private UUID scheduleId;
   private UUID priceId;
 
   @BeforeEach
   void setUp() {
     courtId = UUID.randomUUID();
-    userId = UUID.randomUUID();
     scheduleId = UUID.randomUUID();
     priceId = UUID.randomUUID();
-
-    user = new User();
-    user.setId(userId);
-    user.setUsername("testuser");
 
     court = new Court();
     court.setId(courtId);

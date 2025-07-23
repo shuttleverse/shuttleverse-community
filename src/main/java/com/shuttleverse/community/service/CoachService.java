@@ -62,7 +62,7 @@ public class CoachService {
 
   @Transactional
   public Coach updateCoach(UUID id, Coach coach) {
-    if (isOwner(id, coach.getOwner().getId())) {
+    if (!isOwner(id, coach.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can update coach information");
     }
     coach.setId(id);
@@ -72,7 +72,7 @@ public class CoachService {
   @Transactional
   public void deleteCoach(UUID id) {
     Coach coach = getCoach(id);
-    if (isOwner(id, coach.getOwner().getId())) {
+    if (!isOwner(id, coach.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can delete the coach");
     }
     coachRepository.delete(coach);
@@ -93,7 +93,7 @@ public class CoachService {
   @Transactional
   public CoachSchedule updateSchedule(UUID coachId, UUID scheduleId, CoachSchedule schedule) {
     Coach coach = getCoach(coachId);
-    if (isOwner(coachId, coach.getOwner().getId())) {
+    if (!isOwner(coachId, coach.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can update schedule");
     }
     schedule.setId(scheduleId);
@@ -121,7 +121,7 @@ public class CoachService {
   @Transactional
   public CoachPrice updatePrice(UUID coachId, UUID priceId, CoachPrice price) {
     Coach coach = getCoach(coachId);
-    if (isOwner(coachId, coach.getOwner().getId())) {
+    if (!isOwner(coachId, coach.getOwner().getId())) {
       throw new AccessDeniedException("Only the owner can update price");
     }
     price.setId(priceId);

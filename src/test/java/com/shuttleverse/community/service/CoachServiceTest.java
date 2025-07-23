@@ -8,9 +8,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.shuttleverse.community.SVBaseTest;
 import com.shuttleverse.community.model.Coach;
 import com.shuttleverse.community.model.CoachSchedule;
-import com.shuttleverse.community.model.User;
 import com.shuttleverse.community.repository.CoachRepository;
 import com.shuttleverse.community.repository.CoachScheduleRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -27,7 +27,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
-class CoachServiceTest {
+class CoachServiceTest extends SVBaseTest {
 
   @Mock
   private CoachRepository coachRepository;
@@ -40,20 +40,13 @@ class CoachServiceTest {
 
   private Coach coach;
   private CoachSchedule schedule;
-  private User user;
   private UUID coachId;
-  private UUID userId;
   private UUID scheduleId;
 
   @BeforeEach
   void setUp() {
     coachId = UUID.randomUUID();
-    userId = UUID.randomUUID();
     scheduleId = UUID.randomUUID();
-
-    user = new User();
-    user.setId(userId);
-    user.setUsername("testuser");
 
     coach = new Coach();
     coach.setId(coachId);
