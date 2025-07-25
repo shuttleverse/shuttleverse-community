@@ -36,6 +36,7 @@ public class UserService {
     return Optional.ofNullable(user);
   }
 
+  @Transactional(readOnly = true)
   public Optional<User> findBySub(String sub) {
     UUID userId = UUID.nameUUIDFromBytes(sub.getBytes());
     return userRepository.findById(userId);

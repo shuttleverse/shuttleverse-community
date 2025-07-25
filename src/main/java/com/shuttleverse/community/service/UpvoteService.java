@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +35,7 @@ public class UpvoteService {
   private final StringerPriceRepository stringerPriceRepository;
   private final MapStructMapper mapper;
 
+  @Transactional
   public void addUpvote(BadmintonEntityType badmintonEntityType,
       BadmintonInfoType badmintonInfoType, UUID entityId, User creator) {
     if (upvoteRepository.findByUpvoteCreatorAndEntityId(creator, entityId).isPresent()) {
@@ -48,6 +50,7 @@ public class UpvoteService {
     upvoteRepository.save(upvote);
   }
 
+  @Transactional(readOnly = true)
   public Page<UpvoteResponse> getAllUpvotes(Map<String, String> filters, Pageable pageable) {
     Specification<Upvote> spec = SpecificationBuilder.buildSpecification(filters);
     Page<Upvote> upvotes = upvoteRepository.findAll(spec, pageable);

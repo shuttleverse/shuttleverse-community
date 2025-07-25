@@ -46,16 +46,19 @@ public class CoachService {
         .orElseThrow(() -> new EntityNotFoundException("Coach not found with id: " + id));
   }
 
+  @Transactional(readOnly = true)
   public Page<Coach> getAllCoaches(Map<String, String> filters, Pageable pageable) {
     Specification<Coach> spec = SpecificationBuilder.buildSpecification(filters);
     return coachRepository.findAll(spec, pageable);
   }
 
+  @Transactional(readOnly = true)
   public Page<Coach> getCourtsByBoundingBox(BoundingBoxParams params, Pageable pageable) {
     return coachRepository.findWithinBounds(params.getMinLon(), params.getMinLat(),
         params.getMaxLon(), params.getMaxLat(), pageable);
   }
 
+  @Transactional(readOnly = true)
   public Page<Coach> getCoachesWithinDistance(WithinDistanceParams params, Pageable pageable) {
     return coachRepository.findWithinDistance(params.getLocation(), params.getDistance(), pageable);
   }
@@ -101,6 +104,7 @@ public class CoachService {
     return scheduleRepository.save(schedule);
   }
 
+  @Transactional
   public CoachSchedule upvoteSchedule(UUID scheduleId) {
     CoachSchedule schedule = scheduleRepository.findById(scheduleId)
         .orElseThrow(() -> new EntityNotFoundException("Schedule not found"));
@@ -129,6 +133,7 @@ public class CoachService {
     return priceRepository.save(price);
   }
 
+  @Transactional
   public CoachPrice upvotePrice(UUID priceId) {
     CoachPrice coachPrice = coachPriceRepository.findById(priceId)
         .orElseThrow(() -> new EntityNotFoundException("Price not found"));

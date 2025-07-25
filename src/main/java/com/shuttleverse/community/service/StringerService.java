@@ -42,16 +42,19 @@ public class StringerService {
         .orElseThrow(() -> new EntityNotFoundException("Stringer not found with id: " + id));
   }
 
+  @Transactional(readOnly = true)
   public Page<Stringer> getAllStringers(Map<String, String> filters, Pageable pageable) {
     Specification<Stringer> spec = SpecificationBuilder.buildSpecification(filters);
     return stringerRepository.findAll(spec, pageable);
   }
 
+  @Transactional(readOnly = true)
   public Page<Stringer> getCourtsByBoundingBox(BoundingBoxParams params, Pageable pageable) {
     return stringerRepository.findWithinBounds(params.getMinLon(), params.getMinLat(),
         params.getMaxLon(), params.getMaxLat(), pageable);
   }
 
+  @Transactional(readOnly = true)
   public Page<Stringer> getStringersWithinDistance(WithinDistanceParams params, Pageable pageable) {
     return stringerRepository.findWithinDistance(params.getLocation(), params.getDistance(),
         pageable);
@@ -106,6 +109,7 @@ public class StringerService {
     return price;
   }
 
+  @Transactional
   public StringerPrice upvotePrice(UUID priceId) {
     StringerPrice price = priceRepository.findById(priceId)
         .orElseThrow(() -> new EntityNotFoundException("Price not found"));

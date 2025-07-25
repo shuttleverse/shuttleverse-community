@@ -48,15 +48,18 @@ public class CourtService {
         .orElseThrow(() -> new EntityNotFoundException("Court not found with id: " + id));
   }
 
+  @Transactional(readOnly = true)
   public Page<Court> getCourtsByBoundingBox(BoundingBoxParams params, Pageable pageable) {
     return courtRepository.findWithinBounds(params.getMinLon(), params.getMinLat(),
         params.getMaxLon(), params.getMaxLat(), pageable);
   }
 
+  @Transactional(readOnly = true)
   public Page<Court> getCourtsWithinDistance(WithinDistanceParams params, Pageable pageable) {
     return courtRepository.findWithinDistance(params.getLocation(), params.getDistance(), pageable);
   }
 
+  @Transactional(readOnly = true)
   public Page<Court> getAllCourts(Map<String, String> filters, Pageable pageable) {
     Specification<Court> spec = SpecificationBuilder.buildSpecification(filters);
     return courtRepository.findAll(spec, pageable);

@@ -6,9 +6,9 @@ spring:
     url: jdbc:postgresql://127.0.0.1:54322/postgres?user=postgres&password=postgres
     hikari:
       maximum-pool-size: 5
-      minimum-idle: 2
-      idle-timeout: 30000
-      max-lifetime: 600000
+      minimum-idle: 0
+      idle-timeout: 10000
+      max-lifetime: 300000
       connection-timeout: 30000
   
   devtools:
