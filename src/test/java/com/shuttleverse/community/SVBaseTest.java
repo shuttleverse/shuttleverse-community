@@ -2,8 +2,8 @@ package com.shuttleverse.community;
 
 import static org.mockito.Mockito.mockStatic;
 
-import com.shuttleverse.community.model.User;
-import com.shuttleverse.community.util.AuthenticationUtils;
+import com.shuttleverse.community.model.SVUser;
+import com.shuttleverse.community.util.SVAuthenticationUtils;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,19 +11,19 @@ import org.mockito.MockedStatic;
 
 public abstract class SVBaseTest {
 
-  private MockedStatic<AuthenticationUtils> mockedAuthUtils;
+  private MockedStatic<SVAuthenticationUtils> mockedAuthUtils;
 
-  protected User user;
+  protected SVUser user;
 
   @BeforeEach
   void setUpAuthMock() {
-    user = new User();
+    user = new SVUser();
     user.setId(UUID.randomUUID());
     user.setUsername("testuser");
     user.setId(UUID.randomUUID());
 
-    mockedAuthUtils = mockStatic(AuthenticationUtils.class);
-    mockedAuthUtils.when(AuthenticationUtils::getCurrentUser).thenReturn(user);
+    mockedAuthUtils = mockStatic(SVAuthenticationUtils.class);
+    mockedAuthUtils.when(SVAuthenticationUtils::getCurrentUser).thenReturn(user);
   }
 
   @AfterEach
