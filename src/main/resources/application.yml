@@ -1,3 +1,7 @@
+logging:
+  level:
+    com.netflix.discovery.shared.resolver.aws.ConfigClusterResolver: WARN
+
 spring:
   application:
     name: shuttleverse-community
@@ -10,13 +14,13 @@ spring:
       idle-timeout: 10000
       max-lifetime: 300000
       connection-timeout: 30000
-  
+
   devtools:
     restart:
       enabled: true
 
     livereload:
-      enabled: true
+      enabled: false
 
   profiles:
     default: dev
