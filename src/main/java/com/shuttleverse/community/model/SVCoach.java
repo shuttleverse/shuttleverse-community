@@ -1,0 +1,53 @@
+package com.shuttleverse.community.model;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.Table;
+import java.util.List;
+import lombok.Data;
+
+@Entity
+@Table(name = "coach")
+@Data
+public class SVCoach extends SVBaseModel {
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "club_id")
+  private SVClub club;
+
+  @Column(name = "experience_years")
+  private Integer experienceYears;
+
+  @Column(name = "other_contacts", nullable = false)
+  private String otherContacts;
+
+  @Column(name = "phone_number", length = 20)
+  private String phoneNumber;
+
+  @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  @JoinColumn(name = "coach_id")
+  @OrderBy("upvotes DESC")
+  private List<SVCoachSchedule> scheduleList;
+
+  @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  @JoinColumn(name = "coach_id")
+  @OrderBy("upvotes DESC")
+  private List<SVCoachPrice> priceList;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "owner_id")
+  private SVUser owner;
+
+  @Column(name = "is_verified", nullable = false)
+  private boolean isVerified;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "creator_id")
+  private SVUser creator;
+}
