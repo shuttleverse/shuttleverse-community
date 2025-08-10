@@ -7,5 +7,6 @@ import lombok.Setter;
 @Setter
 public class SVStringerPriceResponse extends SVEntityPriceDto {
 
+  private Double price;
   private String stringName;
 }

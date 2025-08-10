@@ -115,8 +115,8 @@ public class SVCourtService {
       });
     }
 
-    BooleanExpression pricePredicate = SVQueryModel.courtPrice.price.between(params.getMinPrice(),
-        params.getMaxPrice());
+    BooleanExpression pricePredicate = SVQueryModel.courtPrice.minPrice.goe(params.getMinPrice())
+        .and(SVQueryModel.courtPrice.maxPrice.loe(params.getMaxPrice()));
     priceRepository.findAll(pricePredicate).forEach(price -> {
       priceResults.add(price.getCourtId());
     });

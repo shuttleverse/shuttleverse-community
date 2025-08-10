@@ -96,8 +96,8 @@ public class SVCoachService {
   private List<UUID> findCoachesByPriceAndSchedule(SVEntityFilterParams params) {
     Set<UUID> priceResults = new HashSet<>();
     Set<UUID> scheduleResults = new HashSet<>();
-    BooleanExpression pricePredicate = SVQueryModel.coachPrice.price.between(params.getMinPrice(),
-        params.getMaxPrice());
+    BooleanExpression pricePredicate = SVQueryModel.coachPrice.minPrice.goe(params.getMinPrice())
+        .and(SVQueryModel.coachPrice.maxPrice.loe(params.getMaxPrice()));
     priceRepository.findAll(pricePredicate).forEach(price -> {
       priceResults.add(price.getCoachId());
     });
