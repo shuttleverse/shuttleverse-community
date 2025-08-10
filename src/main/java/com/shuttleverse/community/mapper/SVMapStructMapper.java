@@ -1,5 +1,7 @@
 package com.shuttleverse.community.mapper;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shuttleverse.community.dto.SVCoachCreationData;
 import com.shuttleverse.community.dto.SVCoachPriceResponse;
 import com.shuttleverse.community.dto.SVCoachResponse;
@@ -22,6 +24,7 @@ import com.shuttleverse.community.model.SVCourtSchedule;
 import com.shuttleverse.community.model.SVStringer;
 import com.shuttleverse.community.model.SVStringerPrice;
 import com.shuttleverse.community.model.SVUser;
+import java.util.Map;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
@@ -55,6 +58,29 @@ public interface SVMapStructMapper {
     ));
   }
 
+  default Map<String, String> mapStringToMap(String value) {
+    if (value == null) {
+      return null;
+    }
+    try {
+      return new ObjectMapper().readValue(value, new TypeReference<>() {
+      });
+    } catch (Exception e) {
+      throw new RuntimeException("Error mapping String to Map", e);
+    }
+  }
+
+  default String mapMapToString(Map<String, String> value) {
+    if (value == null) {
+      return null;
+    }
+    try {
+      return new ObjectMapper().writeValueAsString(value);
+    } catch (Exception e) {
+      throw new RuntimeException("Error mapping Map to String", e);
+    }
+  }
+
   SVUserResponse userToUserDto(SVUser user);
 
   @Mapping(target = "locationPoint", source = "locationPoint")
@@ -68,27 +94,27 @@ public interface SVMapStructMapper {
 
   SVCoachResponse toCoachResponse(SVCoach coach);
 
-  @Mapping(source = "coachId", target = "parentEntityId")
+  @Mapping(source = "id", target = "parentEntityId")
   @Mapping(source = "isVerified", target = "verified")
   SVCoachPriceResponse toCoachPriceResponse(SVCoachPrice coachPrice);
 
-  @Mapping(source = "coachId", target = "parentEntityId")
+  @Mapping(source = "id", target = "parentEntityId")
   SVCoachScheduleResponse toCoachScheduleResponse(SVCoachSchedule coachSchedule);
 
   SVCourtResponse toCourtResponse(SVCourt court);
 
-  @Mapping(source = "courtId", target = "parentEntityId")
+  @Mapping(source = "id", target = "parentEntityId")
   @Mapping(source = "isVerified", target = "verified")
   SVCourtPriceResponse toCourtPriceResponse(SVCourtPrice courtPrice);
 
-  @Mapping(source = "courtId", target = "parentEntityId")
+  @Mapping(source = "id", target = "parentEntityId")
   @Mapping(source = "openTime", target = "startTime")
   @Mapping(source = "closeTime", target = "endTime")
   SVCourtScheduleResponse toCourtScheduleResponse(SVCourtSchedule courtSchedule);
 
   SVStringerResponse toStringerResponse(SVStringer stringer);
 
-  @Mapping(source = "stringerId", target = "parentEntityId")
+  @Mapping(source = "id", target = "parentEntityId")
   @Mapping(source = "isVerified", target = "verified")
   SVStringerPriceResponse toStringerPriceResponse(SVStringerPrice stringerPrice);
 }

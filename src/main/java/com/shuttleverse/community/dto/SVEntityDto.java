@@ -1,5 +1,6 @@
 package com.shuttleverse.community.dto;
 
+import java.util.Map;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,5 +15,5 @@ public abstract class SVEntityDto {
   protected SVLocationDto locationPoint;
   protected String description;
   protected String phoneNumber;
-  protected String otherContacts;
+  protected Map<String, String> otherContacts;
 }

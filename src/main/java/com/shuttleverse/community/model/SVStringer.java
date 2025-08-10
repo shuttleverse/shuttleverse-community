@@ -1,7 +1,9 @@
 package com.shuttleverse.community.model;
 
+import com.shuttleverse.community.mapper.MapToJsonConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
@@ -10,7 +12,10 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import java.util.List;
+import java.util.Map;
 import lombok.Data;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "stringer")
@@ -21,8 +26,10 @@ public class SVStringer extends SVBaseModel {
   @JoinColumn(name = "club_id")
   private SVClub club;
 
-  @Column(name = "other_contacts", nullable = false)
-  private String otherContacts;
+  @Column(name = "other_contacts")
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Convert(converter = MapToJsonConverter.class)
+  private Map<String, String> otherContacts;
 
   @Column(name = "phone_number", length = 20)
   private String phoneNumber;

@@ -7,5 +7,9 @@ import lombok.Setter;
 @Setter
 public class SVCourtPriceResponse extends SVEntityPriceDto {
 
+  private Double minPrice;
+  private Double maxPrice;
   private Integer duration;
+  private String durationUnit;
+  private String description;
 }
