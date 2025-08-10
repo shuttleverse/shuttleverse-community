@@ -10,7 +10,6 @@ import lombok.Setter;
 public abstract class SVEntityPriceDto {
 
   protected UUID id;
-  protected Double price;
   protected Integer upvotes;
   protected boolean verified;
   protected UUID parentEntityId;
