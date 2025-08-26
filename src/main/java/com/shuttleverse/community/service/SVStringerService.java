@@ -62,9 +62,11 @@ public class SVStringerService {
       Pageable pageable) {
     List<UUID> ids = findStringersByPrice(params);
 
-    BooleanExpression predicate = SVQueryModel.stringer.id.in(ids).and(
-        params.getIsVerified() ? SVQueryModel.stringer.owner.isNotNull()
-            : SVQueryModel.stringer.owner.isNull());
+    BooleanExpression predicate = SVQueryModel.stringer.id.in(ids);
+
+    if (params.getIsVerified() != null) {
+      predicate = predicate.and(SVQueryModel.stringer.owner.isNotNull());
+    }
 
     if (sortParams.getSortType() != SVSortType.LOCATION) {
       Pageable sortedPageable = PageRequest.of(

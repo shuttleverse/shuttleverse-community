@@ -79,9 +79,11 @@ public class SVCourtService {
 
     List<UUID> ids = findCourtsByPriceAndSchedule(params);
 
-    BooleanExpression predicate = SVQueryModel.court.id.in(ids).and(
-        params.getIsVerified() ? SVQueryModel.court.owner.isNotNull()
-            : SVQueryModel.court.owner.isNull());
+    BooleanExpression predicate = SVQueryModel.court.id.in(ids);
+
+    if (params.getIsVerified() != null) {
+      predicate = predicate.and(SVQueryModel.court.owner.isNotNull());
+    }
 
     if (sortParams.getSortType() != SVSortType.LOCATION) {
       Pageable sortedPageable = PageRequest.of(

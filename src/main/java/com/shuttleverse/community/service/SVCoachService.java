@@ -68,9 +68,11 @@ public class SVCoachService {
       Pageable pageable) {
     List<UUID> ids = findCoachesByPriceAndSchedule(params);
 
-    BooleanExpression predicate = SVQueryModel.coach.id.in(ids).and(
-        params.getIsVerified() ? SVQueryModel.coach.owner.isNotNull()
-            : SVQueryModel.coach.owner.isNull());
+    BooleanExpression predicate = SVQueryModel.coach.id.in(ids);
+
+    if (params.getIsVerified() != null) {
+      predicate = predicate.and(SVQueryModel.coach.owner.isNotNull());
+    }
 
     if (sortParams.getSortType() != SVSortType.LOCATION) {
       Pageable sortedPageable = PageRequest.of(
