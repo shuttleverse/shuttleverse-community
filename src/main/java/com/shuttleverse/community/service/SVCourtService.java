@@ -5,11 +5,14 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.shuttleverse.community.constants.SVEntityType;
 import com.shuttleverse.community.constants.SVInfoType;
 import com.shuttleverse.community.constants.SVSortType;
+import com.shuttleverse.community.dto.SVLocationDto;
+import com.shuttleverse.community.mapper.SVMapStructMapper;
 import com.shuttleverse.community.model.SVCourt;
 import com.shuttleverse.community.model.SVCourtPrice;
 import com.shuttleverse.community.model.SVCourtSchedule;
 import com.shuttleverse.community.model.SVUser;
 import com.shuttleverse.community.params.SVBoundingBoxParams;
+import com.shuttleverse.community.params.SVCourtCreationData;
 import com.shuttleverse.community.params.SVEntityFilterParams;
 import com.shuttleverse.community.params.SVSortParams;
 import com.shuttleverse.community.params.SVWithinDistanceParams;
@@ -41,6 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class SVCourtService {
 
+  private final SVMapStructMapper mapper;
   private final SVCourtRepository courtRepository;
   private final SVCourtScheduleRepository scheduleRepository;
   private final SVCourtPriceRepository priceRepository;
@@ -91,7 +95,9 @@ public class SVCourtService {
 
     JPAQuery<SVCourt> query = queryFactory.getQuery(SVQueryModel.court, predicate)
         .orderBy(SVQueryUtils.orderByDistance(SVQueryModel.court.locationPoint,
-            sortParams.getLocation(), sortParams.getSortDirection()));
+            mapper.locationDtoToPoint(
+                new SVLocationDto(sortParams.getLongitude(), sortParams.getLatitude())),
+            sortParams.getSortDirection()));
 
     Long queryCount = queryFactory.getQueryCount(SVQueryModel.court, predicate);
 
@@ -128,11 +134,12 @@ public class SVCourtService {
   }
 
   @Transactional
-  public SVCourt updateCourt(UUID id, SVCourt court) {
-    if (!isOwner(id, court.getOwner().getId())) {
-      throw new AccessDeniedException("Only the owner can update court information");
-    }
-    court.setId(id);
+  public SVCourt updateCourt(UUID id, SVCourtCreationData data) {
+    SVCourt court = courtRepository.findById(id)
+        .orElseThrow(() -> new EntityNotFoundException("Coach not found"));
+
+    mapper.updateCourtFromDto(data, court);
+
     return courtRepository.save(court);
   }
 

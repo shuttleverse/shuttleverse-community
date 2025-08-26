@@ -1,5 +1,6 @@
 package com.shuttleverse.community.repository;
 
+import com.shuttleverse.community.constants.SVEntityType;
 import com.shuttleverse.community.model.SVCoach;
 import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.Page;
@@ -10,6 +11,11 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SVCoachRepository extends SVBaseRepository<SVCoach> {
+
+  @Override
+  default SVEntityType getEntityType() {
+    return SVEntityType.COACH;
+  }
 
   @Query(value = """
       SELECT c.* , ST_Distance(c.location_point, :location) AS distance

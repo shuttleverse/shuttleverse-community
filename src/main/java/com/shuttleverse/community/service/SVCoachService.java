@@ -5,11 +5,14 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.shuttleverse.community.constants.SVEntityType;
 import com.shuttleverse.community.constants.SVInfoType;
 import com.shuttleverse.community.constants.SVSortType;
+import com.shuttleverse.community.dto.SVLocationDto;
+import com.shuttleverse.community.mapper.SVMapStructMapper;
 import com.shuttleverse.community.model.SVCoach;
 import com.shuttleverse.community.model.SVCoachPrice;
 import com.shuttleverse.community.model.SVCoachSchedule;
 import com.shuttleverse.community.model.SVUser;
 import com.shuttleverse.community.params.SVBoundingBoxParams;
+import com.shuttleverse.community.params.SVCoachCreationData;
 import com.shuttleverse.community.params.SVEntityFilterParams;
 import com.shuttleverse.community.params.SVSortParams;
 import com.shuttleverse.community.params.SVWithinDistanceParams;
@@ -41,6 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class SVCoachService {
 
+  private final SVMapStructMapper mapper;
   private final SVCoachRepository coachRepository;
   private final SVCoachScheduleRepository scheduleRepository;
   private final SVCoachPriceRepository priceRepository;
@@ -80,7 +84,8 @@ public class SVCoachService {
 
     JPAQuery<SVCoach> query = queryFactory.getQuery(SVQueryModel.coach, predicate)
         .orderBy(SVQueryUtils.orderByDistance(SVQueryModel.coach.locationPoint,
-            sortParams.getLocation(), sortParams.getSortDirection()));
+            mapper.locationDtoToPoint(new SVLocationDto(sortParams.getLongitude(),
+                sortParams.getLatitude())), sortParams.getSortDirection()));
 
     Long totalCount = queryFactory.getQueryCount(SVQueryModel.coach, predicate);
 
@@ -127,20 +132,18 @@ public class SVCoachService {
   }
 
   @Transactional
-  public SVCoach updateCoach(UUID id, SVCoach coach) {
-    if (!isOwner(id, coach.getOwner().getId())) {
-      throw new AccessDeniedException("Only the owner can update coach information");
-    }
-    coach.setId(id);
+  public SVCoach updateCoach(UUID id, SVCoachCreationData data) {
+    SVCoach coach = coachRepository.findById(id)
+        .orElseThrow(() -> new EntityNotFoundException("Coach not found"));
+
+    mapper.updateCoachFromDto(data, coach);
+
     return coachRepository.save(coach);
   }
 
   @Transactional
   public void deleteCoach(UUID id) {
     SVCoach coach = getCoach(id);
-    if (!isOwner(id, coach.getOwner().getId())) {
-      throw new AccessDeniedException("Only the owner can delete the coach");
-    }
     coachRepository.delete(coach);
   }
 

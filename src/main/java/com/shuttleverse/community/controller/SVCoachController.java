@@ -1,7 +1,6 @@
 package com.shuttleverse.community.controller;
 
 import com.shuttleverse.community.api.SVApiResponse;
-import com.shuttleverse.community.dto.SVCoachCreationData;
 import com.shuttleverse.community.dto.SVCoachPriceResponse;
 import com.shuttleverse.community.dto.SVCoachResponse;
 import com.shuttleverse.community.dto.SVCoachScheduleResponse;
@@ -11,6 +10,7 @@ import com.shuttleverse.community.model.SVCoachPrice;
 import com.shuttleverse.community.model.SVCoachSchedule;
 import com.shuttleverse.community.model.SVUser;
 import com.shuttleverse.community.params.SVBoundingBoxParams;
+import com.shuttleverse.community.params.SVCoachCreationData;
 import com.shuttleverse.community.params.SVEntityFilterParams;
 import com.shuttleverse.community.params.SVSortParams;
 import com.shuttleverse.community.params.SVWithinDistanceParams;
@@ -21,6 +21,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +41,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequestMapping("/coach")
 @RequiredArgsConstructor
@@ -86,8 +88,7 @@ public class SVCoachController {
       @Valid @ModelAttribute SVWithinDistanceParams params) {
     Pageable pageable = PageRequest.of(
         page,
-        size
-    );
+        size);
 
     Page<SVCoach> stringers = coachService.getCoachesWithinDistance(params, pageable);
     Page<SVCoachResponse> response = stringers.map(mapper::toCoachResponse);
@@ -112,8 +113,8 @@ public class SVCoachController {
   @PreAuthorize("@SVCoachService.isSessionUserOwner(#id)")
   public ResponseEntity<SVApiResponse<SVCoachResponse>> updateCoach(
       @PathVariable String id,
-      @Validated @RequestBody SVCoach coach) {
-    SVCoach updatedCoach = coachService.updateCoach(UUID.fromString(id), coach);
+      @Validated @RequestBody SVCoachCreationData coachCreationData) {
+    SVCoach updatedCoach = coachService.updateCoach(UUID.fromString(id), coachCreationData);
     return ResponseEntity.ok(SVApiResponse.success(mapper.toCoachResponse(updatedCoach)));
   }
 

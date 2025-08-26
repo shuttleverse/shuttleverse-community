@@ -1,7 +1,6 @@
 package com.shuttleverse.community.controller;
 
 import com.shuttleverse.community.api.SVApiResponse;
-import com.shuttleverse.community.dto.SVStringerCreationData;
 import com.shuttleverse.community.dto.SVStringerPriceResponse;
 import com.shuttleverse.community.dto.SVStringerResponse;
 import com.shuttleverse.community.mapper.SVMapStructMapper;
@@ -11,6 +10,7 @@ import com.shuttleverse.community.model.SVUser;
 import com.shuttleverse.community.params.SVBoundingBoxParams;
 import com.shuttleverse.community.params.SVEntityFilterParams;
 import com.shuttleverse.community.params.SVSortParams;
+import com.shuttleverse.community.params.SVStringerCreationData;
 import com.shuttleverse.community.params.SVWithinDistanceParams;
 import com.shuttleverse.community.service.SVStringerService;
 import com.shuttleverse.community.service.SVUserService;
@@ -112,8 +112,8 @@ public class SVStringerController {
   @PreAuthorize("@SVStringerService.isSessionUserOwner(#id)")
   public ResponseEntity<SVApiResponse<SVStringerResponse>> updateStringer(
       @PathVariable String id,
-      @Validated @RequestBody SVStringer stringer) {
-    SVStringer updatedStringer = stringerService.updateStringer(UUID.fromString(id), stringer);
+      @Validated @RequestBody SVStringerCreationData data) {
+    SVStringer updatedStringer = stringerService.updateStringer(UUID.fromString(id), data);
     return ResponseEntity.ok(SVApiResponse.success(mapper.toStringerResponse(updatedStringer)));
   }
 

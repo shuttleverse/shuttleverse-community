@@ -1,5 +1,6 @@
 package com.shuttleverse.community.repository;
 
+import com.shuttleverse.community.constants.SVEntityType;
 import com.shuttleverse.community.model.SVStringer;
 import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.Page;
@@ -10,6 +11,11 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SVStringerRepository extends SVBaseRepository<SVStringer> {
+
+  @Override
+  default SVEntityType getEntityType() {
+    return SVEntityType.STRINGER;
+  }
 
   @Query(value = """
       SELECT s.* , ST_Distance(s.location_point, :location) AS distance

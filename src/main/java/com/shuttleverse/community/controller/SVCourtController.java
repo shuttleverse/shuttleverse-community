@@ -1,7 +1,6 @@
 package com.shuttleverse.community.controller;
 
 import com.shuttleverse.community.api.SVApiResponse;
-import com.shuttleverse.community.dto.SVCourtCreationData;
 import com.shuttleverse.community.dto.SVCourtPriceResponse;
 import com.shuttleverse.community.dto.SVCourtResponse;
 import com.shuttleverse.community.dto.SVCourtScheduleResponse;
@@ -11,6 +10,7 @@ import com.shuttleverse.community.model.SVCourtPrice;
 import com.shuttleverse.community.model.SVCourtSchedule;
 import com.shuttleverse.community.model.SVUser;
 import com.shuttleverse.community.params.SVBoundingBoxParams;
+import com.shuttleverse.community.params.SVCourtCreationData;
 import com.shuttleverse.community.params.SVEntityFilterParams;
 import com.shuttleverse.community.params.SVSortParams;
 import com.shuttleverse.community.params.SVWithinDistanceParams;
@@ -118,10 +118,11 @@ public class SVCourtController {
   }
 
   @PutMapping("/{id}")
+  @PreAuthorize("@SVCourtService.isSessionUserOwner(#id)")
   public ResponseEntity<SVApiResponse<SVCourtResponse>> updateCourt(
       @PathVariable String id,
-      @Validated @RequestBody SVCourt court) {
-    SVCourt updatedCourt = courtService.updateCourt(UUID.fromString(id), court);
+      @Validated @RequestBody SVCourtCreationData data) {
+    SVCourt updatedCourt = courtService.updateCourt(UUID.fromString(id), data);
     return ResponseEntity.ok(SVApiResponse.success(mapper.toCourtResponse(updatedCourt)));
   }
 

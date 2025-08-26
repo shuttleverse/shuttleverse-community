@@ -5,12 +5,15 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.shuttleverse.community.constants.SVEntityType;
 import com.shuttleverse.community.constants.SVInfoType;
 import com.shuttleverse.community.constants.SVSortType;
+import com.shuttleverse.community.dto.SVLocationDto;
+import com.shuttleverse.community.mapper.SVMapStructMapper;
 import com.shuttleverse.community.model.SVStringer;
 import com.shuttleverse.community.model.SVStringerPrice;
 import com.shuttleverse.community.model.SVUser;
 import com.shuttleverse.community.params.SVBoundingBoxParams;
 import com.shuttleverse.community.params.SVEntityFilterParams;
 import com.shuttleverse.community.params.SVSortParams;
+import com.shuttleverse.community.params.SVStringerCreationData;
 import com.shuttleverse.community.params.SVWithinDistanceParams;
 import com.shuttleverse.community.query.SVQueryFactory;
 import com.shuttleverse.community.query.SVQueryModel;
@@ -37,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class SVStringerService {
 
+  private final SVMapStructMapper mapper;
   private final SVStringerRepository stringerRepository;
   private final SVStringerPriceRepository priceRepository;
   private final SVUpvoteService upvoteService;
@@ -74,7 +78,8 @@ public class SVStringerService {
 
     JPAQuery<SVStringer> query = queryFactory.getQuery(SVQueryModel.stringer, predicate)
         .orderBy(SVQueryUtils.orderByDistance(SVQueryModel.stringer.locationPoint,
-            sortParams.getLocation(), sortParams.getSortDirection()));
+            mapper.locationDtoToPoint(new SVLocationDto(sortParams.getLongitude(),
+                sortParams.getLatitude())), sortParams.getSortDirection()));
 
     Long queryCount = queryFactory.getQueryCount(SVQueryModel.stringer, predicate);
 
@@ -113,11 +118,12 @@ public class SVStringerService {
   }
 
   @Transactional
-  public SVStringer updateStringer(UUID id, SVStringer stringer) {
-    if (!isOwner(id, stringer.getOwner().getId())) {
-      throw new AccessDeniedException("Only the owner can update stringer information");
-    }
-    stringer.setId(id);
+  public SVStringer updateStringer(UUID id, SVStringerCreationData data) {
+    SVStringer stringer = stringerRepository.findById(id)
+        .orElseThrow(() -> new EntityNotFoundException("Stringer not found"));
+
+    mapper.updateStringerFromDto(data, stringer);
+
     return stringerRepository.save(stringer);
   }
 
