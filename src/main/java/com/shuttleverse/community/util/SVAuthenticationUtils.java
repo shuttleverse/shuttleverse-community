@@ -28,4 +28,16 @@ public class SVAuthenticationUtils {
     }
     throw new SecurityException("No authenticated user found");
   }
+
+  public static Boolean isCurrentUserAdmin() {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth != null && auth.getPrincipal() instanceof Jwt jwt) {
+      String sub = jwt.getSubject();
+      SVUser user = userService.findBySub(sub)
+          .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+      return user.isAdmin();
+    }
+    throw new SecurityException("No authenticated user found");
+  }
 }

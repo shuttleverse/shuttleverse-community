@@ -3,7 +3,6 @@ package com.shuttleverse.community.resolver;
 import com.shuttleverse.community.constants.SVEntityType;
 import com.shuttleverse.community.constants.SVInfoType;
 import com.shuttleverse.community.model.SVBaseUpvotable;
-import com.shuttleverse.community.model.SVUpvotable;
 import com.shuttleverse.community.repository.SVUpvotableRepository;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +32,7 @@ public class SVUpvotableEntityResolver {
         ));
   }
 
-  public SVUpvotable findById(UUID id, SVEntityType entityType, SVInfoType infoType) {
+  public SVBaseUpvotable findById(UUID id, SVEntityType entityType, SVInfoType infoType) {
     return this.repositories.get(entityType).get(infoType).findById(id).orElse(null);
   }
 

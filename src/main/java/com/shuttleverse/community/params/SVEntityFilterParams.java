@@ -20,6 +20,6 @@ public class SVEntityFilterParams {
     this.daysOfWeek = daysOfWeek;
     this.minPrice = minPrice != null ? minPrice : 0;
     this.maxPrice = maxPrice == null ? Integer.MAX_VALUE : maxPrice;
-    this.isVerified = isVerified != null ? isVerified : false;
+    this.isVerified = isVerified;
   }
 }

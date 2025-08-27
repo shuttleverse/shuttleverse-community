@@ -1,16 +1,17 @@
 package com.shuttleverse.community.controller;
 
 import com.shuttleverse.community.api.SVApiResponse;
-import com.shuttleverse.community.dto.SVCoachCreationData;
 import com.shuttleverse.community.dto.SVCoachPriceResponse;
 import com.shuttleverse.community.dto.SVCoachResponse;
 import com.shuttleverse.community.dto.SVCoachScheduleResponse;
+import com.shuttleverse.community.dto.SVCoachScheduleCreationData;
 import com.shuttleverse.community.mapper.SVMapStructMapper;
 import com.shuttleverse.community.model.SVCoach;
 import com.shuttleverse.community.model.SVCoachPrice;
 import com.shuttleverse.community.model.SVCoachSchedule;
 import com.shuttleverse.community.model.SVUser;
 import com.shuttleverse.community.params.SVBoundingBoxParams;
+import com.shuttleverse.community.params.SVCoachCreationData;
 import com.shuttleverse.community.params.SVEntityFilterParams;
 import com.shuttleverse.community.params.SVSortParams;
 import com.shuttleverse.community.params.SVWithinDistanceParams;
@@ -21,10 +22,12 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -40,6 +43,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequestMapping("/coach")
 @RequiredArgsConstructor
@@ -86,8 +90,7 @@ public class SVCoachController {
       @Valid @ModelAttribute SVWithinDistanceParams params) {
     Pageable pageable = PageRequest.of(
         page,
-        size
-    );
+        size);
 
     Page<SVCoach> stringers = coachService.getCoachesWithinDistance(params, pageable);
     Page<SVCoachResponse> response = stringers.map(mapper::toCoachResponse);
@@ -112,8 +115,8 @@ public class SVCoachController {
   @PreAuthorize("@SVCoachService.isSessionUserOwner(#id)")
   public ResponseEntity<SVApiResponse<SVCoachResponse>> updateCoach(
       @PathVariable String id,
-      @Validated @RequestBody SVCoach coach) {
-    SVCoach updatedCoach = coachService.updateCoach(UUID.fromString(id), coach);
+      @Validated @RequestBody SVCoachCreationData coachCreationData) {
+    SVCoach updatedCoach = coachService.updateCoach(UUID.fromString(id), coachCreationData);
     return ResponseEntity.ok(SVApiResponse.success(mapper.toCoachResponse(updatedCoach)));
   }
 
@@ -128,6 +131,9 @@ public class SVCoachController {
   public ResponseEntity<SVApiResponse<List<SVCoachScheduleResponse>>> addSchedule(
       @PathVariable String id,
       @Validated @RequestBody List<SVCoachSchedule> schedules, @AuthenticationPrincipal Jwt jwt) {
+    if (coachService.isVerified(id)) {
+      throw new AccessDeniedException("Cannot add to verified coach");
+    }
 
     String sub = jwt.getSubject();
     SVUser creator = userService.findBySub(sub)
@@ -158,6 +164,10 @@ public class SVCoachController {
       @PathVariable String id,
       @Validated @RequestBody List<SVCoachPrice> prices,
       @AuthenticationPrincipal Jwt jwt) {
+    if (coachService.isVerified(id)) {
+      throw new AccessDeniedException("Cannot add to verified coach");
+    }
+
     String sub = jwt.getSubject();
     SVUser creator = userService.findBySub(sub)
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
@@ -169,6 +179,7 @@ public class SVCoachController {
   }
 
   @PutMapping("/{id}/price/{priceId}")
+  @PreAuthorize("@SVCoachService.isSessionUserOwner(#id)")
   public ResponseEntity<SVApiResponse<SVCoachPriceResponse>> updatePrice(
       @PathVariable String id,
       @PathVariable String priceId,
@@ -202,5 +213,32 @@ public class SVCoachController {
 
     SVCoachSchedule schedule = coachService.upvoteSchedule(UUID.fromString(scheduleId), creator);
     return ResponseEntity.ok(SVApiResponse.success(mapper.toCoachScheduleResponse(schedule)));
+  }
+
+  @PutMapping("/{id}/schedules")
+  @PreAuthorize("@SVCoachService.isSessionUserOwner(#id)")
+  public ResponseEntity<SVApiResponse<List<SVCoachScheduleResponse>>> updateAllSchedules(
+      @PathVariable String id,
+      @Validated @RequestBody List<SVCoachScheduleCreationData> scheduleCreationData) {
+    List<SVCoachSchedule> schedules = scheduleCreationData.stream()
+        .map(mapper::toCoachSchedule)
+        .toList();
+    List<SVCoachSchedule> updatedSchedules = coachService.updateAllSchedules(UUID.fromString(id), schedules);
+    List<SVCoachScheduleResponse> response = updatedSchedules.stream()
+        .map(mapper::toCoachScheduleResponse)
+        .toList();
+    return ResponseEntity.ok(SVApiResponse.success(response));
+  }
+
+  @PutMapping("/{id}/prices")
+  @PreAuthorize("@SVCoachService.isSessionUserOwner(#id)")
+  public ResponseEntity<SVApiResponse<List<SVCoachPriceResponse>>> updateAllPrices(
+      @PathVariable String id,
+      @Validated @RequestBody List<SVCoachPrice> prices) {
+    List<SVCoachPrice> updatedPrices = coachService.updateAllPrices(UUID.fromString(id), prices);
+    List<SVCoachPriceResponse> response = updatedPrices.stream()
+        .map(mapper::toCoachPriceResponse)
+        .toList();
+    return ResponseEntity.ok(SVApiResponse.success(response));
   }
 }

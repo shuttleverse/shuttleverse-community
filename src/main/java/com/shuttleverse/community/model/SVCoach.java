@@ -48,13 +48,6 @@ public class SVCoach extends SVBaseModel {
   private List<SVCoachPrice> priceList;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "owner_id")
-  private SVUser owner;
-
-  @Column(name = "is_verified", nullable = false)
-  private boolean isVerified;
-
-  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "creator_id")
   private SVUser creator;
 }
