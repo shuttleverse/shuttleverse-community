@@ -24,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -74,8 +75,7 @@ public class SVStringerController {
       @Valid @ModelAttribute SVBoundingBoxParams params) {
     Pageable pageable = PageRequest.of(
         page,
-        size
-    );
+        size);
     Page<SVStringer> stringers = stringerService.getCourtsByBoundingBox(params, pageable);
     Page<SVStringerResponse> response = stringers.map(mapper::toStringerResponse);
 
@@ -89,8 +89,7 @@ public class SVStringerController {
       @Valid @ModelAttribute SVWithinDistanceParams params) {
     Pageable pageable = PageRequest.of(
         page,
-        size
-    );
+        size);
 
     Page<SVStringer> stringers = stringerService.getStringersWithinDistance(params, pageable);
     Page<SVStringerResponse> response = stringers.map(mapper::toStringerResponse);
@@ -129,6 +128,10 @@ public class SVStringerController {
       @PathVariable String id,
       @Validated @RequestBody List<SVStringerPrice> prices,
       @AuthenticationPrincipal Jwt jwt) {
+    if (stringerService.isVerified(id)) {
+      throw new AccessDeniedException("Cannot add to verified court");
+    }
+
     String sub = jwt.getSubject();
     SVUser creator = userService.findBySub(sub)
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
@@ -161,5 +164,17 @@ public class SVStringerController {
 
     SVStringerPrice price = stringerService.upvotePrice(UUID.fromString(priceId), creator);
     return ResponseEntity.ok(SVApiResponse.success(mapper.toStringerPriceResponse(price)));
+  }
+
+  @PutMapping("/{id}/prices")
+  @PreAuthorize("@SVStringerService.isSessionUserOwner(#id)")
+  public ResponseEntity<SVApiResponse<List<SVStringerPriceResponse>>> updateAllPrices(
+      @PathVariable String id,
+      @Validated @RequestBody List<SVStringerPrice> prices) {
+    List<SVStringerPrice> updatedPrices = stringerService.updateAllPrices(UUID.fromString(id), prices);
+    List<SVStringerPriceResponse> response = updatedPrices.stream()
+        .map(mapper::toStringerPriceResponse)
+        .toList();
+    return ResponseEntity.ok(SVApiResponse.success(response));
   }
 }

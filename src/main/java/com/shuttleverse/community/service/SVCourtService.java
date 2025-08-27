@@ -25,8 +25,10 @@ import com.shuttleverse.community.util.SVAuthenticationUtils;
 import com.shuttleverse.community.util.SVQueryUtils;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -90,8 +92,7 @@ public class SVCourtService {
           pageable.getPageNumber(),
           pageable.getPageSize(),
           sortParams.getSortDirection().toPagableDirection(),
-          sortParams.getSortType().toPageableProperty()
-      );
+          sortParams.getSortType().toPageableProperty());
       return courtRepository.findAll(predicate, sortedPageable);
     }
 
@@ -108,8 +109,7 @@ public class SVCourtService {
             .limit(pageable.getPageSize())
             .fetch(),
         pageable,
-        () -> queryCount
-    );
+        () -> queryCount);
   }
 
   private List<UUID> findCourtsByPriceAndSchedule(SVEntityFilterParams params) {
@@ -232,11 +232,114 @@ public class SVCourtService {
     return courtPrice;
   }
 
+  @Transactional
+  public void setInfoVerified(UUID courtId) {
+    List<SVCourtPrice> prices = priceRepository.findAllByCourtId(courtId);
+    List<SVCourtSchedule> schedules = scheduleRepository.findAllByCourtId(courtId);
+
+    for (SVCourtPrice price : prices) {
+      price.setIsVerified(true);
+    }
+    for (SVCourtSchedule schedule : schedules) {
+      schedule.setIsVerified(true);
+    }
+    priceRepository.saveAll(prices);
+    scheduleRepository.saveAll(schedules);
+  }
+
   public boolean isSessionUserOwner(String courtId) {
     UUID courtUuid = UUID.fromString(courtId);
     SVCourt court = getCourt(courtUuid);
-    UUID userId = SVAuthenticationUtils.getCurrentUser().getId();
-    return court.getOwner().getId().equals(userId);
+    SVUser user = SVAuthenticationUtils.getCurrentUser();
+    return court.getOwner().getId().equals(user.getId()) || user.isAdmin();
+  }
+
+  public boolean isVerified(String courtId) {
+    UUID courtUuid = UUID.fromString(courtId);
+    SVCourt court = getCourt(courtUuid);
+
+    return court.getOwner() == null;
+  }
+
+  @Transactional
+  public List<SVCourtSchedule> updateAllSchedules(UUID courtId,
+      List<SVCourtSchedule> newSchedules) {
+    List<SVCourtSchedule> existingSchedules = scheduleRepository.findAllByCourtId(courtId);
+    List<SVCourtSchedule> result = new ArrayList<>();
+
+    Map<String, SVCourtSchedule> existingSchedulesMap = new HashMap<>();
+    for (SVCourtSchedule schedule : existingSchedules) {
+      String key = schedule.getDayOfWeek() + "_" + schedule.getOpenTime() + "_" + schedule.getCloseTime();
+      log.warn(key);
+      existingSchedulesMap.put(key, schedule);
+    }
+
+    log.warn(" ____ ");
+    for (SVCourtSchedule newSchedule : newSchedules) {
+      newSchedule.setCourtId(courtId);
+
+      String key = newSchedule.getDayOfWeek() + "_" + newSchedule.getOpenTime() + "_"
+          + newSchedule.getCloseTime();
+      SVCourtSchedule existingSchedule = existingSchedulesMap.get(key);
+      log.warn(key);
+
+      if (existingSchedule != null) {
+        result.add(existingSchedule);
+        existingSchedulesMap.remove(key);
+      } else {
+        newSchedule.setSubmittedBy(SVAuthenticationUtils.getCurrentUser());
+        result.add(scheduleRepository.save(newSchedule));
+      }
+    }
+
+    if (!existingSchedulesMap.isEmpty()) {
+      scheduleRepository.deleteAll(existingSchedulesMap.values());
+      for (SVCourtSchedule schedule : existingSchedulesMap.values()) {
+        upvoteService.deleteUpvoteByEntityId(schedule.getId());
+      }
+    }
+
+    return result;
+  }
+
+  @Transactional
+  public List<SVCourtPrice> updateAllPrices(UUID courtId, List<SVCourtPrice> newPrices) {
+    List<SVCourtPrice> existingPrices = priceRepository.findAllByCourtId(courtId);
+    List<SVCourtPrice> result = new ArrayList<>();
+
+    Map<String, SVCourtPrice> existingPricesMap = new HashMap<>();
+    for (SVCourtPrice price : existingPrices) {
+      String key = price.getMinPrice() + "_" + price.getMaxPrice() + "_"
+          + price.getDuration() + "_" + price.getDurationUnit() + "_"
+          + (price.getDescription() != null ? price.getDescription() : "");
+      existingPricesMap.put(key, price);
+    }
+
+    for (SVCourtPrice newPrice : newPrices) {
+      newPrice.setCourtId(courtId);
+
+      String key = newPrice.getMinPrice() + "_" + newPrice.getMaxPrice() + "_"
+          + newPrice.getDuration() + "_" + newPrice.getDurationUnit() + "_"
+          + (newPrice.getDescription() != null ? newPrice.getDescription() : "");
+      SVCourtPrice existingPrice = existingPricesMap.get(key);
+
+      if (existingPrice != null) {
+        result.add(existingPrice);
+        existingPricesMap.remove(key);
+      } else {
+        newPrice.setSubmittedBy(SVAuthenticationUtils.getCurrentUser());
+        result.add(priceRepository.save(newPrice));
+      }
+    }
+
+    if (!existingPricesMap.isEmpty()) {
+      priceRepository.deleteAll(existingPricesMap.values());
+      for (SVCourtPrice price : existingPricesMap.values()) {
+        upvoteService.deleteUpvoteByEntityId(price.getId());
+      }
+    }
+
+    return result;
   }
 
   private boolean isOwner(UUID courtId, UUID userId) {

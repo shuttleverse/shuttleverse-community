@@ -4,6 +4,7 @@ import com.shuttleverse.community.api.SVApiResponse;
 import com.shuttleverse.community.dto.SVCourtPriceResponse;
 import com.shuttleverse.community.dto.SVCourtResponse;
 import com.shuttleverse.community.dto.SVCourtScheduleResponse;
+import com.shuttleverse.community.dto.SVCourtScheduleCreationData;
 import com.shuttleverse.community.mapper.SVMapStructMapper;
 import com.shuttleverse.community.model.SVCourt;
 import com.shuttleverse.community.model.SVCourtPrice;
@@ -26,6 +27,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -72,8 +74,7 @@ public class SVCourtController {
       @Valid @ModelAttribute SVBoundingBoxParams params) {
     Pageable pageable = PageRequest.of(
         page,
-        size
-    );
+        size);
     Page<SVCourt> courts = courtService.getCourtsByBoundingBox(params, pageable);
     Page<SVCourtResponse> response = courts.map(mapper::toCourtResponse);
 
@@ -87,8 +88,7 @@ public class SVCourtController {
       @Valid @ModelAttribute SVWithinDistanceParams params) {
     Pageable pageable = PageRequest.of(
         page,
-        size
-    );
+        size);
 
     Page<SVCourt> stringers = courtService.getCourtsWithinDistance(params, pageable);
     Page<SVCourtResponse> response = stringers.map(mapper::toCourtResponse);
@@ -137,6 +137,10 @@ public class SVCourtController {
       @PathVariable String id,
       @Validated @RequestBody List<SVCourtSchedule> schedule,
       @AuthenticationPrincipal Jwt jwt) {
+    if (courtService.isVerified(id)) {
+      throw new AccessDeniedException("Cannot add to verified court");
+    }
+
     String sub = jwt.getSubject();
     SVUser creator = userService.findBySub(sub)
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
@@ -153,6 +157,10 @@ public class SVCourtController {
       @PathVariable String id,
       @Validated @RequestBody List<SVCourtPrice> prices,
       @AuthenticationPrincipal Jwt jwt) {
+    if (courtService.isVerified(id)) {
+      throw new AccessDeniedException("Cannot add to verified court");
+    }
+
     String sub = jwt.getSubject();
     SVUser creator = userService.findBySub(sub)
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
@@ -199,5 +207,33 @@ public class SVCourtController {
 
     SVCourtPrice price = courtService.upvotePrice(UUID.fromString(priceId), creator);
     return ResponseEntity.ok(SVApiResponse.success(mapper.toCourtPriceResponse(price)));
+  }
+
+  @PutMapping("/{id}/schedules")
+  @PreAuthorize("@SVCourtService.isSessionUserOwner(#id)")
+  public ResponseEntity<SVApiResponse<List<SVCourtScheduleResponse>>> updateAllSchedules(
+      @PathVariable String id,
+      @Validated @RequestBody List<SVCourtScheduleCreationData> scheduleCreationData) {
+    List<SVCourtSchedule> schedules = scheduleCreationData.stream()
+        .map(mapper::toCourtSchedule)
+        .toList();
+    List<SVCourtSchedule> updatedSchedules = courtService.updateAllSchedules(UUID.fromString(id),
+        schedules);
+    List<SVCourtScheduleResponse> response = updatedSchedules.stream()
+        .map(mapper::toCourtScheduleResponse)
+        .toList();
+    return ResponseEntity.ok(SVApiResponse.success(response));
+  }
+
+  @PutMapping("/{id}/prices")
+  @PreAuthorize("@SVCourtService.isSessionUserOwner(#id)")
+  public ResponseEntity<SVApiResponse<List<SVCourtPriceResponse>>> updateAllPrices(
+      @PathVariable String id,
+      @Validated @RequestBody List<SVCourtPrice> prices) {
+    List<SVCourtPrice> updatedPrices = courtService.updateAllPrices(UUID.fromString(id), prices);
+    List<SVCourtPriceResponse> response = updatedPrices.stream()
+        .map(mapper::toCourtPriceResponse)
+        .toList();
+    return ResponseEntity.ok(SVApiResponse.success(response));
   }
 }

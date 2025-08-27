@@ -25,8 +25,10 @@ import com.shuttleverse.community.util.SVAuthenticationUtils;
 import com.shuttleverse.community.util.SVQueryUtils;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +37,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -79,15 +80,15 @@ public class SVCoachService {
           pageable.getPageNumber(),
           pageable.getPageSize(),
           sortParams.getSortDirection().toPagableDirection(),
-          sortParams.getSortType().toPageableProperty()
-      );
+          sortParams.getSortType().toPageableProperty());
       return coachRepository.findAll(predicate, sortedPageable);
     }
 
     JPAQuery<SVCoach> query = queryFactory.getQuery(SVQueryModel.coach, predicate)
         .orderBy(SVQueryUtils.orderByDistance(SVQueryModel.coach.locationPoint,
             mapper.locationDtoToPoint(new SVLocationDto(sortParams.getLongitude(),
-                sortParams.getLatitude())), sortParams.getSortDirection()));
+                sortParams.getLatitude())),
+            sortParams.getSortDirection()));
 
     Long totalCount = queryFactory.getQueryCount(SVQueryModel.coach, predicate);
 
@@ -96,8 +97,7 @@ public class SVCoachService {
             .limit(pageable.getPageSize())
             .fetch(),
         pageable,
-        () -> totalCount
-    );
+        () -> totalCount);
   }
 
   private List<UUID> findCoachesByPriceAndSchedule(SVEntityFilterParams params) {
@@ -163,10 +163,6 @@ public class SVCoachService {
 
   @Transactional
   public SVCoachSchedule updateSchedule(UUID coachId, UUID scheduleId, SVCoachSchedule schedule) {
-    SVCoach coach = getCoach(coachId);
-    if (!isOwner(coachId, coach.getOwner().getId())) {
-      throw new AccessDeniedException("Only the owner can update schedule");
-    }
     schedule.setId(scheduleId);
     schedule.setCoachId(coachId);
     return scheduleRepository.save(schedule);
@@ -192,10 +188,6 @@ public class SVCoachService {
 
   @Transactional
   public SVCoachPrice updatePrice(UUID coachId, UUID priceId, SVCoachPrice price) {
-    SVCoach coach = getCoach(coachId);
-    if (!isOwner(coachId, coach.getOwner().getId())) {
-      throw new AccessDeniedException("Only the owner can update price");
-    }
     price.setId(priceId);
     price.setCoachId(coachId);
     return priceRepository.save(price);
@@ -226,11 +218,111 @@ public class SVCoachService {
     return priceRepository.saveAll(prices);
   }
 
+  @Transactional
+  public void setInfoVerified(UUID coachId) {
+    List<SVCoachPrice> prices = priceRepository.findAllByCoachId(coachId);
+    List<SVCoachSchedule> schedules = scheduleRepository.findAllByCoachId(coachId);
+
+    for (SVCoachPrice price : prices) {
+      price.setIsVerified(true);
+    }
+    for (SVCoachSchedule schedule : schedules) {
+      schedule.setIsVerified(true);
+    }
+    priceRepository.saveAll(prices);
+    scheduleRepository.saveAll(schedules);
+  }
+
   public boolean isSessionUserOwner(String coachId) {
     UUID coachUuid = UUID.fromString(coachId);
     SVCoach coach = getCoach(coachUuid);
-    UUID userId = SVAuthenticationUtils.getCurrentUser().getId();
-    return coach.getOwner().getId().equals(userId);
+    SVUser user = SVAuthenticationUtils.getCurrentUser();
+    return coach.getOwner().getId().equals(user.getId()) || user.isAdmin();
+  }
+
+  public boolean isVerified(String coachId) {
+    UUID coachUuid = UUID.fromString(coachId);
+    SVCoach coach = getCoach(coachUuid);
+
+    return coach.getOwner() == null;
+  }
+
+  @Transactional
+  public List<SVCoachSchedule> updateAllSchedules(UUID coachId,
+      List<SVCoachSchedule> newSchedules) {
+    List<SVCoachSchedule> existingSchedules = scheduleRepository.findAllByCoachId(coachId);
+    List<SVCoachSchedule> result = new ArrayList<>();
+
+    Map<String, SVCoachSchedule> existingSchedulesMap = new HashMap<>();
+    for (SVCoachSchedule schedule : existingSchedules) {
+      String key = schedule.getDayOfWeek() + "_" + schedule.getStartTime() + "_" + schedule.getEndTime();
+      existingSchedulesMap.put(key, schedule);
+    }
+
+    for (SVCoachSchedule newSchedule : newSchedules) {
+      newSchedule.setCoachId(coachId);
+
+      String key = newSchedule.getDayOfWeek() + "_" + newSchedule.getStartTime() + "_"
+          + newSchedule.getEndTime();
+      SVCoachSchedule existingSchedule = existingSchedulesMap.get(key);
+
+      if (existingSchedule != null) {
+        result.add(existingSchedule);
+        existingSchedulesMap.remove(key);
+      } else {
+        newSchedule.setSubmittedBy(SVAuthenticationUtils.getCurrentUser());
+        result.add(scheduleRepository.save(newSchedule));
+      }
+    }
+
+    if (!existingSchedulesMap.isEmpty()) {
+      scheduleRepository.deleteAll(existingSchedulesMap.values());
+      for (SVCoachSchedule schedule : existingSchedulesMap.values()) {
+        upvoteService.deleteUpvoteByEntityId(schedule.getId());
+      }
+    }
+
+    return result;
+  }
+
+  @Transactional
+  public List<SVCoachPrice> updateAllPrices(UUID coachId, List<SVCoachPrice> newPrices) {
+    List<SVCoachPrice> existingPrices = priceRepository.findAllByCoachId(coachId);
+    List<SVCoachPrice> result = new ArrayList<>();
+
+    Map<String, SVCoachPrice> existingPricesMap = new HashMap<>();
+    for (SVCoachPrice price : existingPrices) {
+      String key = price.getMinPrice() + "_" + price.getMaxPrice() + "_"
+          + price.getDuration() + "_" + price.getDurationUnit() + "_"
+          + (price.getDescription() != null ? price.getDescription() : "");
+      existingPricesMap.put(key, price);
+    }
+
+    for (SVCoachPrice newPrice : newPrices) {
+      newPrice.setCoachId(coachId);
+
+      String key = newPrice.getMinPrice() + "_" + newPrice.getMaxPrice() + "_"
+          + newPrice.getDuration() + "_" + newPrice.getDurationUnit() + "_"
+          + (newPrice.getDescription() != null ? newPrice.getDescription() : "");
+      SVCoachPrice existingPrice = existingPricesMap.get(key);
+
+      if (existingPrice != null) {
+        result.add(existingPrice);
+        existingPricesMap.remove(key);
+      } else {
+        newPrice.setSubmittedBy(SVAuthenticationUtils.getCurrentUser());
+        result.add(priceRepository.save(newPrice));
+      }
+    }
+
+    if (!existingPricesMap.isEmpty()) {
+      priceRepository.deleteAll(existingPricesMap.values());
+      for (SVCoachPrice price : existingPricesMap.values()) {
+        upvoteService.deleteUpvoteByEntityId(price.getId());
+      }
+    }
+
+    return result;
   }
 
   private boolean isOwner(UUID coachId, UUID userId) {

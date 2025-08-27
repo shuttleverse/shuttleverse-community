@@ -11,4 +11,6 @@ public interface SVUpvoteRepository extends JpaRepository<SVUpvote, UUID>,
     QuerydslPredicateExecutor<SVUpvote> {
 
   Optional<SVUpvote> findByUpvoteCreatorAndEntityId(SVUser upvoteCreator, UUID entityId);
+
+  void deleteByEntityId(UUID entityId);
 }

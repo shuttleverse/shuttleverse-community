@@ -29,6 +29,9 @@ public class SVOwnershipClaimService {
   private final SVOwnershipClaimRepository ownershipClaimRepository;
   private final SVVerificationFileRepository verificationFileRepository;
   private final SVBaseEntityResolver baseEntityResolver;
+  private final SVCoachService coachService;
+  private final SVCourtService courtService;
+  private final SVStringerService stringerService;
 
   public Page<SVOwnershipClaim> getClaims(Pageable pageable) {
     return ownershipClaimRepository.findAllWithCreatorAndFiles(pageable);
@@ -94,6 +97,16 @@ public class SVOwnershipClaimService {
     baseEntityResolver.findById(claim.getEntityId(), claim.getEntityType())
         .setOwner(claim.getCreator());
     claim.setStatus(status);
+
+    if (claim.getStatus() == SVVerificationStatus.APPROVED) {
+      switch (claim.getEntityType()) {
+        case COACH -> coachService.setInfoVerified(claim.getEntityId());
+        case COURT -> courtService.setInfoVerified(claim.getEntityId());
+        case STRINGER -> stringerService.setInfoVerified(claim.getEntityId());
+        default -> throw new IllegalStateException("Should not get here");
+      }
+    }
+
     return ownershipClaimRepository.save(claim);
   }
 

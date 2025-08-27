@@ -2,9 +2,11 @@ package com.shuttleverse.community.mapper;
 
 import com.shuttleverse.community.dto.SVCoachPriceResponse;
 import com.shuttleverse.community.dto.SVCoachResponse;
+import com.shuttleverse.community.dto.SVCoachScheduleCreationData;
 import com.shuttleverse.community.dto.SVCoachScheduleResponse;
 import com.shuttleverse.community.dto.SVCourtPriceResponse;
 import com.shuttleverse.community.dto.SVCourtResponse;
+import com.shuttleverse.community.dto.SVCourtScheduleCreationData;
 import com.shuttleverse.community.dto.SVCourtScheduleResponse;
 import com.shuttleverse.community.dto.SVLocationDto;
 import com.shuttleverse.community.dto.SVOwnershipClaimResponse;
@@ -18,10 +20,10 @@ import com.shuttleverse.community.model.SVCoachSchedule;
 import com.shuttleverse.community.model.SVCourt;
 import com.shuttleverse.community.model.SVCourtPrice;
 import com.shuttleverse.community.model.SVCourtSchedule;
+import com.shuttleverse.community.model.SVOwnershipClaim;
 import com.shuttleverse.community.model.SVStringer;
 import com.shuttleverse.community.model.SVStringerPrice;
 import com.shuttleverse.community.model.SVUser;
-import com.shuttleverse.community.model.SVOwnershipClaim;
 import com.shuttleverse.community.model.SVVerificationFile;
 import com.shuttleverse.community.params.SVCoachCreationData;
 import com.shuttleverse.community.params.SVCourtCreationData;
@@ -101,6 +103,12 @@ public interface SVMapStructMapper {
   @Mapping(source = "openTime", target = "startTime")
   @Mapping(source = "closeTime", target = "endTime")
   SVCourtScheduleResponse toCourtScheduleResponse(SVCourtSchedule courtSchedule);
+
+  @Mapping(source = "startTime", target = "openTime")
+  @Mapping(source = "endTime", target = "closeTime")
+  SVCourtSchedule toCourtSchedule(SVCourtScheduleCreationData courtScheduleCreationData);
+
+  SVCoachSchedule toCoachSchedule(SVCoachScheduleCreationData coachScheduleCreationData);
 
   SVStringerResponse toStringerResponse(SVStringer stringer);
 

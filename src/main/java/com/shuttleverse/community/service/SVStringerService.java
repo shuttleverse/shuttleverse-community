@@ -23,8 +23,10 @@ import com.shuttleverse.community.util.SVAuthenticationUtils;
 import com.shuttleverse.community.util.SVQueryUtils;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -73,15 +75,15 @@ public class SVStringerService {
           pageable.getPageNumber(),
           pageable.getPageSize(),
           sortParams.getSortDirection().toPagableDirection(),
-          sortParams.getSortType().toPageableProperty()
-      );
+          sortParams.getSortType().toPageableProperty());
       return stringerRepository.findAll(predicate, sortedPageable);
     }
 
     JPAQuery<SVStringer> query = queryFactory.getQuery(SVQueryModel.stringer, predicate)
         .orderBy(SVQueryUtils.orderByDistance(SVQueryModel.stringer.locationPoint,
             mapper.locationDtoToPoint(new SVLocationDto(sortParams.getLongitude(),
-                sortParams.getLatitude())), sortParams.getSortDirection()));
+                sortParams.getLatitude())),
+            sortParams.getSortDirection()));
 
     Long queryCount = queryFactory.getQueryCount(SVQueryModel.stringer, predicate);
 
@@ -90,8 +92,7 @@ public class SVStringerService {
             .limit(pageable.getPageSize())
             .fetch(),
         pageable,
-        () -> queryCount
-    );
+        () -> queryCount);
   }
 
   private List<UUID> findStringersByPrice(SVEntityFilterParams params) {
@@ -179,11 +180,64 @@ public class SVStringerService {
     return priceRepository.save(price);
   }
 
+  @Transactional
+  public void setInfoVerified(UUID stringerId) {
+    List<SVStringerPrice> prices = priceRepository.findAllByStringerId(stringerId);
+
+    for (SVStringerPrice price : prices) {
+      price.setIsVerified(true);
+    }
+    priceRepository.saveAll(prices);
+  }
+
   public boolean isSessionUserOwner(String stringerId) {
     UUID stringerUuid = UUID.fromString(stringerId);
     SVStringer stringer = getStringer(stringerUuid);
-    UUID userId = SVAuthenticationUtils.getCurrentUser().getId();
-    return stringer.getOwner().getId().equals(userId);
+    SVUser user = SVAuthenticationUtils.getCurrentUser();
+    return stringer.getOwner().getId().equals(user.getId()) || user.isAdmin();
+  }
+
+  public boolean isVerified(String stringerId) {
+    UUID stringerUuid = UUID.fromString(stringerId);
+    SVStringer stringer = getStringer(stringerUuid);
+
+    return stringer.getOwner() == null;
+  }
+
+  @Transactional
+  public List<SVStringerPrice> updateAllPrices(UUID stringerId, List<SVStringerPrice> newPrices) {
+    List<SVStringerPrice> existingPrices = priceRepository.findAllByStringerId(stringerId);
+    List<SVStringerPrice> result = new ArrayList<>();
+
+    Map<String, SVStringerPrice> existingPricesMap = new HashMap<>();
+    for (SVStringerPrice price : existingPrices) {
+      String key = price.getStringName() + "_" + price.getPrice();
+      existingPricesMap.put(key, price);
+    }
+
+    for (SVStringerPrice newPrice : newPrices) {
+      newPrice.setStringerId(stringerId);
+
+      String key = newPrice.getStringName() + "_" + newPrice.getPrice();
+      SVStringerPrice existingPrice = existingPricesMap.get(key);
+
+      if (existingPrice != null) {
+        result.add(existingPrice);
+        existingPricesMap.remove(key);
+      } else {
+        newPrice.setSubmittedBy(SVAuthenticationUtils.getCurrentUser());
+        result.add(priceRepository.save(newPrice));
+      }
+    }
+
+    if (!existingPricesMap.isEmpty()) {
+      priceRepository.deleteAll(existingPricesMap.values());
+      for (SVStringerPrice price : existingPricesMap.values()) {
+        upvoteService.deleteUpvoteByEntityId(price.getId());
+      }
+    }
+
+    return result;
   }
 
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")

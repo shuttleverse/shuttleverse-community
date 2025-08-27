@@ -66,4 +66,9 @@ public class SVUpvoteService {
         .createdAt(upvote.getCreatedAt())
         .build();
   }
+
+  @Transactional
+  public void deleteUpvoteByEntityId(UUID entityId) {
+    upvoteRepository.deleteByEntityId(entityId);
+  }
 }
