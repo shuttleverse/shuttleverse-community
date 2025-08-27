@@ -23,11 +23,3 @@ eureka:
     fetch-registry: false
   instance:
     prefer-ip-address: false
-
-cloudflare:
-  r2:
-    account-id: test
-    access-key: test
-    secret-key: test
-    bucket: test
-    public-base-url: http://test/test
