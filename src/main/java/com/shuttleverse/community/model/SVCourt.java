@@ -49,8 +49,4 @@ public class SVCourt extends SVBaseModel {
   @JoinColumn(name = "creator_id")
   private SVUser creator;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "owner_id")
-  private SVUser owner;
-
 }

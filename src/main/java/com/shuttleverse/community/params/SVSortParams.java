@@ -5,7 +5,6 @@ import com.shuttleverse.community.constants.SVSortDirection;
 import com.shuttleverse.community.constants.SVSortType;
 import lombok.Getter;
 import lombok.Setter;
-import org.locationtech.jts.geom.Point;
 
 @Getter
 @Setter
@@ -13,11 +12,16 @@ public class SVSortParams {
 
   private SVSortType sortType;
   private SVSortDirection sortDirection;
-  private Point location;
+  private Double longitude;
+  private Double latitude;
 
-  public SVSortParams(SVSortType sortType, SVSortDirection sortDirection, Point location) {
+  public SVSortParams(SVSortType sortType, SVSortDirection sortDirection, Double longitude,
+      Double latitude) {
     this.sortType = sortType != null ? sortType : SVSortType.LOCATION;
     this.sortDirection = sortDirection != null ? sortDirection : SVSortDirection.ASC;
-    this.location = location != null ? location : SVInfoConstant.DEFAULT_LOCATION;
+    this.longitude = longitude != null ? longitude
+        : SVInfoConstant.DEFAULT_LOCATION.getX();
+    this.latitude = latitude != null ? latitude
+        : SVInfoConstant.DEFAULT_LOCATION.getY();
   }
 }

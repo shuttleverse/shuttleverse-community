@@ -30,7 +30,7 @@ public abstract class SVBaseUpvotable implements SVUpvotable {
   @Column(name = "updated_at", nullable = false)
   protected ZonedDateTime updatedAt;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "submitted_by", nullable = false)
   protected SVUser submittedBy;
 

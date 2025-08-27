@@ -46,8 +46,4 @@ public class SVStringer extends SVBaseModel {
   @JoinColumn(name = "creator_id")
   private SVUser creator;
 
-  @ManyToOne
-  @JoinColumn(name = "owner_id")
-  private SVUser owner;
-
 }
