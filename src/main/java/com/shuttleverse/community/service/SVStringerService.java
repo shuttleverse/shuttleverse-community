@@ -34,7 +34,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -133,9 +132,6 @@ public class SVStringerService {
   @Transactional
   public void deleteStringer(UUID id) {
     SVStringer stringer = getStringer(id);
-    if (!isOwner(id, stringer.getOwner().getId())) {
-      throw new AccessDeniedException("Only the owner can delete the stringer");
-    }
     stringerRepository.delete(stringer);
   }
 
@@ -153,9 +149,6 @@ public class SVStringerService {
 
   @Transactional
   public SVStringerPrice updatePrice(UUID stringerId, UUID priceId, SVStringerPrice price) {
-    if (!isOwner(stringerId, price.getSubmittedBy().getId())) {
-      throw new AccessDeniedException("Only the owner can update price");
-    }
     price.setId(priceId);
     price.setStringerId(stringerId);
     return priceRepository.save(price);
@@ -201,7 +194,7 @@ public class SVStringerService {
     UUID stringerUuid = UUID.fromString(stringerId);
     SVStringer stringer = getStringer(stringerUuid);
 
-    return stringer.getOwner() == null;
+    return stringer.getOwner() != null;
   }
 
   @Transactional
@@ -238,12 +231,6 @@ public class SVStringerService {
     }
 
     return result;
-  }
-
-  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-  private boolean isOwner(UUID stringerId, UUID userId) {
-    SVStringer stringer = getStringer(stringerId);
-    return stringer.getOwner().getId().equals(userId);
   }
 
 }
