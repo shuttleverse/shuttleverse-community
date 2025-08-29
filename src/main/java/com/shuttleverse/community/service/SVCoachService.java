@@ -244,7 +244,7 @@ public class SVCoachService {
     UUID coachUuid = UUID.fromString(coachId);
     SVCoach coach = getCoach(coachUuid);
 
-    return coach.getOwner() == null;
+    return coach.getOwner() != null;
   }
 
   @Transactional
@@ -255,7 +255,8 @@ public class SVCoachService {
 
     Map<String, SVCoachSchedule> existingSchedulesMap = new HashMap<>();
     for (SVCoachSchedule schedule : existingSchedules) {
-      String key = schedule.getDayOfWeek() + "_" + schedule.getStartTime() + "_" + schedule.getEndTime();
+      String key =
+          schedule.getDayOfWeek() + "_" + schedule.getStartTime() + "_" + schedule.getEndTime();
       existingSchedulesMap.put(key, schedule);
     }
 

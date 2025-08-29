@@ -37,7 +37,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -148,9 +147,6 @@ public class SVCourtService {
   @Transactional
   public void deleteCourt(UUID id) {
     SVCourt court = getCourt(id);
-    if (!isOwner(id, court.getOwner().getId())) {
-      throw new AccessDeniedException("Only the owner can delete the court");
-    }
     courtRepository.delete(court);
   }
 
@@ -170,9 +166,6 @@ public class SVCourtService {
   @Transactional
   public SVCourtSchedule updateSchedule(UUID courtId, UUID scheduleId, SVCourtSchedule schedule) {
     SVCourt court = getCourt(courtId);
-    if (!isOwner(courtId, court.getOwner().getId())) {
-      throw new AccessDeniedException("Only the owner can update schedule");
-    }
     schedule.setId(scheduleId);
     schedule.setCourtId(courtId);
     return scheduleRepository.save(schedule);
@@ -207,9 +200,6 @@ public class SVCourtService {
 
   @Transactional
   public SVCourtPrice updatePrice(UUID courtId, UUID priceId, SVCourtPrice price) {
-    if (!isOwner(courtId, price.getSubmittedBy().getId())) {
-      throw new AccessDeniedException("Only the owner can update price");
-    }
     price.setId(priceId);
     price.setCourtId(courtId);
     return priceRepository.save(price);
@@ -258,7 +248,7 @@ public class SVCourtService {
     UUID courtUuid = UUID.fromString(courtId);
     SVCourt court = getCourt(courtUuid);
 
-    return court.getOwner() == null;
+    return court.getOwner() != null;
   }
 
   @Transactional
@@ -269,7 +259,8 @@ public class SVCourtService {
 
     Map<String, SVCourtSchedule> existingSchedulesMap = new HashMap<>();
     for (SVCourtSchedule schedule : existingSchedules) {
-      String key = schedule.getDayOfWeek() + "_" + schedule.getOpenTime() + "_" + schedule.getCloseTime();
+      String key =
+          schedule.getDayOfWeek() + "_" + schedule.getOpenTime() + "_" + schedule.getCloseTime();
       log.warn(key);
       existingSchedulesMap.put(key, schedule);
     }
@@ -340,10 +331,5 @@ public class SVCourtService {
     }
 
     return result;
-  }
-
-  private boolean isOwner(UUID courtId, UUID userId) {
-    SVCourt court = getCourt(courtId);
-    return court.getOwner().getId().equals(userId);
   }
 }
