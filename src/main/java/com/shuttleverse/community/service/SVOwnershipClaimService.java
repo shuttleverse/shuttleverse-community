@@ -69,7 +69,8 @@ public class SVOwnershipClaimService {
     try {
       for (MultipartFile file : files) {
         String key =
-            "claim/" + creator.getUsername() + "/" + claim.getId() + "/" + UUID.randomUUID() + "-"
+            "claim/" + creator.getUsername() + "-" + creator.getId() + "/" + claim.getId() + "/"
+                + UUID.randomUUID() + "-"
                 + file.getOriginalFilename();
         String fileUrl = storageService.uploadFile(file, key);
 
