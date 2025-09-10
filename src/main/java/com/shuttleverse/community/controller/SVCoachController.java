@@ -4,7 +4,8 @@ import com.shuttleverse.community.api.SVApiResponse;
 import com.shuttleverse.community.dto.SVCoachPriceResponse;
 import com.shuttleverse.community.dto.SVCoachResponse;
 import com.shuttleverse.community.dto.SVCoachScheduleResponse;
-import com.shuttleverse.community.dto.SVCoachScheduleCreationData;
+import com.shuttleverse.community.dto.SVEntityPriceCreationData;
+import com.shuttleverse.community.dto.SVEntityScheduleCreationData;
 import com.shuttleverse.community.mapper.SVMapStructMapper;
 import com.shuttleverse.community.model.SVCoach;
 import com.shuttleverse.community.model.SVCoachPrice;
@@ -130,7 +131,8 @@ public class SVCoachController {
   @PostMapping("/{id}/schedule")
   public ResponseEntity<SVApiResponse<List<SVCoachScheduleResponse>>> addSchedule(
       @PathVariable String id,
-      @Validated @RequestBody List<SVCoachSchedule> schedules, @AuthenticationPrincipal Jwt jwt) {
+      @Validated @RequestBody List<SVEntityScheduleCreationData> schedules,
+      @AuthenticationPrincipal Jwt jwt) {
     if (coachService.isVerified(id)) {
       throw new AccessDeniedException("Cannot add to verified coach");
     }
@@ -138,8 +140,9 @@ public class SVCoachController {
     String sub = jwt.getSubject();
     SVUser creator = userService.findBySub(sub)
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
+    List<SVCoachSchedule> addedSchedules = schedules.stream().map(mapper::toCoachSchedule).toList();
     List<SVCoachSchedule> newSchedules = coachService.addSchedule(creator, UUID.fromString(id),
-        schedules);
+        addedSchedules);
     List<SVCoachScheduleResponse> response = newSchedules.stream()
         .map(mapper::toCoachScheduleResponse)
         .toList();
@@ -162,7 +165,7 @@ public class SVCoachController {
   @PostMapping("/{id}/price")
   public ResponseEntity<SVApiResponse<List<SVCoachPriceResponse>>> addPrice(
       @PathVariable String id,
-      @Validated @RequestBody List<SVCoachPrice> prices,
+      @Validated @RequestBody List<SVEntityPriceCreationData> prices,
       @AuthenticationPrincipal Jwt jwt) {
     if (coachService.isVerified(id)) {
       throw new AccessDeniedException("Cannot add to verified coach");
@@ -171,7 +174,9 @@ public class SVCoachController {
     String sub = jwt.getSubject();
     SVUser creator = userService.findBySub(sub)
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
-    List<SVCoachPrice> newPrices = coachService.addPrice(creator, UUID.fromString(id), prices);
+
+    List<SVCoachPrice> addedPrices = prices.stream().map(mapper::toCoachPrice).toList();
+    List<SVCoachPrice> newPrices = coachService.addPrice(creator, UUID.fromString(id), addedPrices);
     List<SVCoachPriceResponse> response = newPrices.stream()
         .map(mapper::toCoachPriceResponse)
         .toList();
@@ -219,11 +224,12 @@ public class SVCoachController {
   @PreAuthorize("@SVCoachService.isSessionUserOwner(#id)")
   public ResponseEntity<SVApiResponse<List<SVCoachScheduleResponse>>> updateAllSchedules(
       @PathVariable String id,
-      @Validated @RequestBody List<SVCoachScheduleCreationData> scheduleCreationData) {
+      @Validated @RequestBody List<SVEntityScheduleCreationData> scheduleCreationData) {
     List<SVCoachSchedule> schedules = scheduleCreationData.stream()
         .map(mapper::toCoachSchedule)
         .toList();
-    List<SVCoachSchedule> updatedSchedules = coachService.updateAllSchedules(UUID.fromString(id), schedules);
+    List<SVCoachSchedule> updatedSchedules = coachService.updateAllSchedules(UUID.fromString(id),
+        schedules);
     List<SVCoachScheduleResponse> response = updatedSchedules.stream()
         .map(mapper::toCoachScheduleResponse)
         .toList();
@@ -234,8 +240,9 @@ public class SVCoachController {
   @PreAuthorize("@SVCoachService.isSessionUserOwner(#id)")
   public ResponseEntity<SVApiResponse<List<SVCoachPriceResponse>>> updateAllPrices(
       @PathVariable String id,
-      @Validated @RequestBody List<SVCoachPrice> prices) {
-    List<SVCoachPrice> updatedPrices = coachService.updateAllPrices(UUID.fromString(id), prices);
+      @Validated @RequestBody List<SVEntityPriceCreationData> prices) {
+    List<SVCoachPrice> newPrices = prices.stream().map(mapper::toCoachPrice).toList();
+    List<SVCoachPrice> updatedPrices = coachService.updateAllPrices(UUID.fromString(id), newPrices);
     List<SVCoachPriceResponse> response = updatedPrices.stream()
         .map(mapper::toCoachPriceResponse)
         .toList();

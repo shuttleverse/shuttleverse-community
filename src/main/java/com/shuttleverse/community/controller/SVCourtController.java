@@ -4,7 +4,8 @@ import com.shuttleverse.community.api.SVApiResponse;
 import com.shuttleverse.community.dto.SVCourtPriceResponse;
 import com.shuttleverse.community.dto.SVCourtResponse;
 import com.shuttleverse.community.dto.SVCourtScheduleResponse;
-import com.shuttleverse.community.dto.SVCourtScheduleCreationData;
+import com.shuttleverse.community.dto.SVEntityPriceCreationData;
+import com.shuttleverse.community.dto.SVEntityScheduleCreationData;
 import com.shuttleverse.community.mapper.SVMapStructMapper;
 import com.shuttleverse.community.model.SVCourt;
 import com.shuttleverse.community.model.SVCourtPrice;
@@ -135,7 +136,7 @@ public class SVCourtController {
   @PostMapping("/{id}/schedule")
   public ResponseEntity<SVApiResponse<List<SVCourtScheduleResponse>>> addSchedule(
       @PathVariable String id,
-      @Validated @RequestBody List<SVCourtSchedule> schedule,
+      @Validated @RequestBody List<SVEntityScheduleCreationData> schedules,
       @AuthenticationPrincipal Jwt jwt) {
     if (courtService.isVerified(id)) {
       throw new AccessDeniedException("Cannot add to verified court");
@@ -144,9 +145,10 @@ public class SVCourtController {
     String sub = jwt.getSubject();
     SVUser creator = userService.findBySub(sub)
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
-    List<SVCourtSchedule> newSchedule = courtService.addSchedule(creator, UUID.fromString(id),
-        schedule);
-    List<SVCourtScheduleResponse> response = newSchedule.stream()
+    List<SVCourtSchedule> addedSchedules = schedules.stream().map(mapper::toCourtSchedule).toList();
+    List<SVCourtSchedule> newSchedules = courtService.addSchedule(creator, UUID.fromString(id),
+        addedSchedules);
+    List<SVCourtScheduleResponse> response = newSchedules.stream()
         .map(mapper::toCourtScheduleResponse)
         .toList();
     return ResponseEntity.ok(SVApiResponse.success(response));
@@ -155,7 +157,7 @@ public class SVCourtController {
   @PostMapping("/{id}/price")
   public ResponseEntity<SVApiResponse<List<SVCourtPriceResponse>>> addPrice(
       @PathVariable String id,
-      @Validated @RequestBody List<SVCourtPrice> prices,
+      @Validated @RequestBody List<SVEntityPriceCreationData> prices,
       @AuthenticationPrincipal Jwt jwt) {
     if (courtService.isVerified(id)) {
       throw new AccessDeniedException("Cannot add to verified court");
@@ -165,7 +167,8 @@ public class SVCourtController {
     SVUser creator = userService.findBySub(sub)
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-    List<SVCourtPrice> newPrices = courtService.addPrice(creator, UUID.fromString(id), prices);
+    List<SVCourtPrice> addedPrices = prices.stream().map(mapper::toCourtPrice).toList();
+    List<SVCourtPrice> newPrices = courtService.addPrice(creator, UUID.fromString(id), addedPrices);
     List<SVCourtPriceResponse> response = newPrices.stream()
         .map(mapper::toCourtPriceResponse)
         .toList();
@@ -213,7 +216,7 @@ public class SVCourtController {
   @PreAuthorize("@SVCourtService.isSessionUserOwner(#id)")
   public ResponseEntity<SVApiResponse<List<SVCourtScheduleResponse>>> updateAllSchedules(
       @PathVariable String id,
-      @Validated @RequestBody List<SVCourtScheduleCreationData> scheduleCreationData) {
+      @Validated @RequestBody List<SVEntityScheduleCreationData> scheduleCreationData) {
     List<SVCourtSchedule> schedules = scheduleCreationData.stream()
         .map(mapper::toCourtSchedule)
         .toList();
@@ -229,8 +232,9 @@ public class SVCourtController {
   @PreAuthorize("@SVCourtService.isSessionUserOwner(#id)")
   public ResponseEntity<SVApiResponse<List<SVCourtPriceResponse>>> updateAllPrices(
       @PathVariable String id,
-      @Validated @RequestBody List<SVCourtPrice> prices) {
-    List<SVCourtPrice> updatedPrices = courtService.updateAllPrices(UUID.fromString(id), prices);
+      @Validated @RequestBody List<SVEntityPriceCreationData> prices) {
+    List<SVCourtPrice> newPrices = prices.stream().map(mapper::toCourtPrice).toList();
+    List<SVCourtPrice> updatedPrices = courtService.updateAllPrices(UUID.fromString(id), newPrices);
     List<SVCourtPriceResponse> response = updatedPrices.stream()
         .map(mapper::toCourtPriceResponse)
         .toList();

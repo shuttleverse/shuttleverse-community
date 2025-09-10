@@ -1,6 +1,7 @@
 package com.shuttleverse.community.controller;
 
 import com.shuttleverse.community.api.SVApiResponse;
+import com.shuttleverse.community.dto.SVStringerPriceCreationData;
 import com.shuttleverse.community.dto.SVStringerPriceResponse;
 import com.shuttleverse.community.dto.SVStringerResponse;
 import com.shuttleverse.community.mapper.SVMapStructMapper;
@@ -126,7 +127,7 @@ public class SVStringerController {
   @PostMapping("/{id}/price")
   public ResponseEntity<SVApiResponse<List<SVStringerPriceResponse>>> addPrice(
       @PathVariable String id,
-      @Validated @RequestBody List<SVStringerPrice> prices,
+      @Validated @RequestBody List<SVStringerPriceCreationData> prices,
       @AuthenticationPrincipal Jwt jwt) {
     if (stringerService.isVerified(id)) {
       throw new AccessDeniedException("Cannot add to verified court");
@@ -136,8 +137,9 @@ public class SVStringerController {
     SVUser creator = userService.findBySub(sub)
         .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
+    List<SVStringerPrice> addedPrices = prices.stream().map(mapper::toStringerPrice).toList();
     List<SVStringerPrice> newPrices = stringerService.addPrice(creator, UUID.fromString(id),
-        prices);
+        addedPrices);
     List<SVStringerPriceResponse> response = newPrices.stream()
         .map(mapper::toStringerPriceResponse)
         .toList();
@@ -170,8 +172,10 @@ public class SVStringerController {
   @PreAuthorize("@SVStringerService.isSessionUserOwner(#id)")
   public ResponseEntity<SVApiResponse<List<SVStringerPriceResponse>>> updateAllPrices(
       @PathVariable String id,
-      @Validated @RequestBody List<SVStringerPrice> prices) {
-    List<SVStringerPrice> updatedPrices = stringerService.updateAllPrices(UUID.fromString(id), prices);
+      @Validated @RequestBody List<SVStringerPriceCreationData> prices) {
+    List<SVStringerPrice> newPrices = prices.stream().map(mapper::toStringerPrice).toList();
+    List<SVStringerPrice> updatedPrices = stringerService.updateAllPrices(UUID.fromString(id),
+        newPrices);
     List<SVStringerPriceResponse> response = updatedPrices.stream()
         .map(mapper::toStringerPriceResponse)
         .toList();
