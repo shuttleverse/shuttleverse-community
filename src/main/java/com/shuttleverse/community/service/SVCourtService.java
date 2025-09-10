@@ -261,18 +261,15 @@ public class SVCourtService {
     for (SVCourtSchedule schedule : existingSchedules) {
       String key =
           schedule.getDayOfWeek() + "_" + schedule.getOpenTime() + "_" + schedule.getCloseTime();
-      log.warn(key);
       existingSchedulesMap.put(key, schedule);
     }
 
-    log.warn(" ____ ");
     for (SVCourtSchedule newSchedule : newSchedules) {
       newSchedule.setCourtId(courtId);
 
       String key = newSchedule.getDayOfWeek() + "_" + newSchedule.getOpenTime() + "_"
           + newSchedule.getCloseTime();
       SVCourtSchedule existingSchedule = existingSchedulesMap.get(key);
-      log.warn(key);
 
       if (existingSchedule != null) {
         result.add(existingSchedule);

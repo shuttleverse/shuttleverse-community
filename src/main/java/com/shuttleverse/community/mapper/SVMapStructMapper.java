@@ -2,14 +2,15 @@ package com.shuttleverse.community.mapper;
 
 import com.shuttleverse.community.dto.SVCoachPriceResponse;
 import com.shuttleverse.community.dto.SVCoachResponse;
-import com.shuttleverse.community.dto.SVCoachScheduleCreationData;
 import com.shuttleverse.community.dto.SVCoachScheduleResponse;
 import com.shuttleverse.community.dto.SVCourtPriceResponse;
 import com.shuttleverse.community.dto.SVCourtResponse;
-import com.shuttleverse.community.dto.SVCourtScheduleCreationData;
 import com.shuttleverse.community.dto.SVCourtScheduleResponse;
+import com.shuttleverse.community.dto.SVEntityPriceCreationData;
+import com.shuttleverse.community.dto.SVEntityScheduleCreationData;
 import com.shuttleverse.community.dto.SVLocationDto;
 import com.shuttleverse.community.dto.SVOwnershipClaimResponse;
+import com.shuttleverse.community.dto.SVStringerPriceCreationData;
 import com.shuttleverse.community.dto.SVStringerPriceResponse;
 import com.shuttleverse.community.dto.SVStringerResponse;
 import com.shuttleverse.community.dto.SVUserResponse;
@@ -106,9 +107,15 @@ public interface SVMapStructMapper {
 
   @Mapping(source = "startTime", target = "openTime")
   @Mapping(source = "endTime", target = "closeTime")
-  SVCourtSchedule toCourtSchedule(SVCourtScheduleCreationData courtScheduleCreationData);
+  SVCourtSchedule toCourtSchedule(SVEntityScheduleCreationData courtScheduleCreationData);
 
-  SVCoachSchedule toCoachSchedule(SVCoachScheduleCreationData coachScheduleCreationData);
+  SVCoachSchedule toCoachSchedule(SVEntityScheduleCreationData coachScheduleCreationData);
+
+  SVCourtPrice toCourtPrice(SVEntityPriceCreationData courtPriceCreationData);
+
+  SVCoachPrice toCoachPrice(SVEntityPriceCreationData courtPriceCreationData);
+
+  SVStringerPrice toStringerPrice(SVStringerPriceCreationData priceCreationData);
 
   SVStringerResponse toStringerResponse(SVStringer stringer);
 
