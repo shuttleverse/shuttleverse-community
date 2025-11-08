@@ -1,8 +1,11 @@
 package com.shuttleverse.community.repository;
 
 import com.shuttleverse.community.model.SVUser;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.stereotype.Repository;
 
@@ -11,4 +14,7 @@ public interface SVUserRepository extends JpaRepository<SVUser, UUID>,
     QuerydslPredicateExecutor<SVUser> {
 
   SVUser findByEmail(String email);
+
+  @Query("SELECT u FROM SVUser u WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :query, '%')) ORDER BY u.username")
+  List<SVUser> searchByUsername(@Param("query") String query);
 }

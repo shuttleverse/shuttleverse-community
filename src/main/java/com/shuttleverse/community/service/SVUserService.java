@@ -41,4 +41,22 @@ public class SVUserService {
     UUID userId = UUID.nameUUIDFromBytes(sub.getBytes());
     return userRepository.findById(userId);
   }
+
+  @Transactional(readOnly = true)
+  public Optional<SVUser> findById(UUID id) {
+    return userRepository.findById(id);
+  }
+
+  @Transactional(readOnly = true)
+  public java.util.List<SVUser> findByIds(java.util.List<UUID> ids) {
+    return userRepository.findAllById(ids);
+  }
+
+  @Transactional(readOnly = true)
+  public java.util.List<SVUser> searchByUsername(String query) {
+    if (query == null || query.trim().isEmpty()) {
+      return java.util.Collections.emptyList();
+    }
+    return userRepository.searchByUsername(query.trim());
+  }
 }
